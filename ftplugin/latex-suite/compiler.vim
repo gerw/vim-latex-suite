@@ -397,6 +397,10 @@ function! Tex_ForwardSearchLaTeX()
 
 			endif
 
+		elseif (viewer == "synctex_wrapper" )
+			" Unix + synctex_wrapper
+			" syntax is: synctex_wrapper TARGET_FILE LINE_NUMBER COLUMN_NUMBER SOURCE_FILE
+			let execString = 'silent! !synctex_wrapper "'.mainfnameRoot.'.'.s:target.'" '.line('.').' '.col('.').' "'.expand('%').'"'
 		else
 			" We must be using a generic UNIX viewer
 			" syntax is: viewer TARGET_FILE LINE_NUMBER SOURCE_FILE

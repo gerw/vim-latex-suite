@@ -2,15 +2,14 @@
 " Language:     LaTeX
 " Maintainer:   Johannes Tanzler <jtanzler@yline.com>
 " Created:      Sat, 16 Feb 2002 16:50:19 +0100
-" Last Change:	Sun, 17 Feb 2002 00:09:11 +0100
+" Last Change:	Fri, 10 Oct 2003 15:31:31 +0200
 " Last Update:  18th feb 2002, by LH :
 "               (*) better support for the option
 "               (*) use some regex instead of several '||'.
-" Version: 0.02
-" URL: comming soon: http://www.unet.univie.ac.at/~a9925098/vim/indent/tex.vim
-
-" --> If you're a Vim guru & and you find something that could be done in a
-"     better (perhaps in a more Vim-ish or Vi-ish) way, please let me know! 
+"               Oct 9th, 2003, by JT:
+"               (*) don't change indentation of lines starting with '%'
+" Version: 0.03
+" URL: http://www.unet.univie.ac.at/~a9925098/vim/indent/tex.vim
 
 " Options: {{{
 "
@@ -65,6 +64,23 @@ if exists("*GetTeXIndent") | finish
 endif
 
 
+" " Counts matches of a regexp <rexp> in line number <line>.
+" " Doesn't count matches inside strings and comments (as defined by current
+" " syntax).
+" " Copied from http://vim.cybermirror.org/runtime/indent/pov.vim
+" function! s:MatchCount(line, rexp)
+"   let str = getline(a:line)
+"   let i = 0
+"   let n = 0
+"   while i >= 0
+"     let i = matchend(str, a:rexp, i)
+"     if i >= 0 && synIDattr(synID(a:line, i, 0), "name") !~? "string\|comment"
+"       let n = n + 1
+"     endif
+"   endwhile
+"   return n
+" endfunction
+
 
 function GetTeXIndent()
 
@@ -84,15 +100,21 @@ function GetTeXIndent()
     return ind
   endif
 
+	" if line =~ '{%*\s*$'
+	"     let ind = ind + &sw
+	" end
+	" if cline =~ '^\s*}.*$'
+	"     let ind = ind - &sw
+	" endif
+
   " Add a 'shiftwidth' after beginning of environments.
   " Don't add it for \begin{document}, \begin{verbatim} and \begin{comment}
-  ""if line =~ '^\s*\\begin{\(.*\)}'  && line !~ 'verbatim' 
-  " LH modification : \begin does not always start a line
-  if line =~ '\\begin{\(.*\)}'  && line !~ 'verbatim' 
+  if line =~ '\\begin{\(\w*\*\?\)}'  && line !~ 'verbatim' 
         \ && line !~ 'document'
         \ && line !~ 'comment'
+        \ && line !~ '\\end{\(\w*\*\?\)}'
 
-    let ind = ind + &sw
+    let ind = ind + &sw " *count
 
     if g:tex_indent_items == 1
       " Add another sw for item-environments
@@ -104,9 +126,10 @@ function GetTeXIndent()
 
   
   " Subtract a 'shiftwidth' when an environment ends
-  if cline =~ '^\s*\\end' && cline !~ 'verbatim' 
+  if cline =~ '\\end{\(\w*\*\?\)}' && cline !~ 'verbatim' 
         \&& cline !~ 'document'
         \&& cline !~ 'comment'
+        \&& cline !~ '\\begin{\(\w*\*\?\)}'
 
     if g:tex_indent_items == 1
       " Remove another sw for item-environments
@@ -139,3 +162,4 @@ function GetTeXIndent()
   return ind
 endfunction
 
+" vim:sw=2 ts=2

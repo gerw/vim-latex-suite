@@ -219,7 +219,10 @@ function! Tex_pack_updateall(force)
 		" Do not use bwipe, but that leads to excessive buffer number
 		" consumption. Besides, its intuitive for a custom package to remain
 		" on the buffer list.
-		q
+		" q
+
+		" Kick the custom package out from the buffer list.
+		bwipe
 
 		let i = i + 1
 		let packname = Tex_Strntok(g:Tex_package_detected, ',', i)

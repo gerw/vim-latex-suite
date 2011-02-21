@@ -53,13 +53,14 @@ function! Tex_FoldSections(lst, endpat)
 	if s =~ '%%fakesection'
 		let s = '^\s*' . s
 	else
-		let s = '^\s*\\' . s . '\W\|^\s*%%fake' . s
+		let s = '^\%(%[ =-]*\n\)\?\s*\\' . s . '\W\|^\s*%%fake' . s
+		" let s = '^\s*\\' . s . '\W'
 	endif
 	let endpat = s . '\|' . a:endpat
 	if i > 0
 		call Tex_FoldSections(strpart(a:lst,i+1), endpat)
 	endif
-	let endpat = '^\s*\\appendix\W\|' . endpat
+	let endpat = '^\s*\\appendix\W\|^\\begin{document}\|' . endpat
 	call AddSyntaxFoldItem(s, endpat, 0, -1)
 endfunction
 " }}}
@@ -296,7 +297,9 @@ function! MakeTexFolds(force)
 		call Tex_FoldSections(g:Tex_FoldedSections,
 			\ '^\s*\\frontmatter\|^\s*\\mainmatter\|^\s*\\backmatter\|'
 			\. '^\s*\\begin{thebibliography\|>>>\|^\s*\\endinput\|'
-			\. '^\s*\\begin{slide\|^\s*\\end{document')
+			\. '^\s*\\begin{slide\|^\s*\\end{document\|'
+			\. '^\n*\s*\\\(begin\|end\){appendix}'
+			\. '\|^\_s*\(^[^%]*\\begin{frame}\)\(\_.\(^[^%]*\\begin{frame}\)\@!\)*\\bibliography')
 	endif
 	" }}} 
 	
@@ -334,13 +337,18 @@ function! MakeTexFolds(force)
 	" }}}
 	
 	call MakeSyntaxFolds(a:force)
-	normal! zv
 endfunction
 
 " }}}
 " TexFoldTextFunction: create fold text for folds {{{
 function! TexFoldTextFunction()
 	let leadingSpace = matchstr('                                       ', ' \{,'.indent(v:foldstart).'}')
+	" The number of lines is already aligned to width '3'. We align it to width '5'
+	let myfoldtext = foldtext()
+	let leadingzeros = 5-max([strlen(matchstr(myfoldtext, '\d\+')),3])
+	if leadingzeros > 0
+		let myfoldtext = substitute(myfoldtext, '\ze\d\+', matchstr('     ', ' \{,'.leadingzeros.'}'), '')
+	endif
 	if getline(v:foldstart) =~ '^\s*\\begin{'
 		let header = matchstr(getline(v:foldstart),
 							\ '^\s*\\begin{\zs\([:alpha:]*\)[^}]*\ze}')
@@ -369,7 +377,7 @@ function! TexFoldTextFunction()
 			let i = i + 1
 		endwhile
 
-		let ftxto = foldtext()
+		let ftxto = myfoldtext
 		" if no caption found, then use the second line.
 		if caption == ''
 			let caption = getline(v:foldstart + 1)
@@ -379,14 +387,17 @@ function! TexFoldTextFunction()
 						\ ' ('.label.'): '.caption
 		return leadingSpace.retText
 
+	elseif getline(v:foldstart) =~ '^%\+[ =-]*$'
+		let ftxto = leadingSpace.myfoldtext
+		return substitute(ftxto, ':.*', ': ' . escape(getline(v:foldstart+1),'\'), '')
 	elseif getline(v:foldstart) =~ '^%' && getline(v:foldstart) !~ '^%%fake'
-		let ftxto = foldtext()
+		let ftxto = myfoldtext
 		return leadingSpace.substitute(ftxto, ':', ': % ', '')
 	elseif getline(v:foldstart) =~ '^\s*\\document\(class\|style\).*{'
-		let ftxto = leadingSpace.foldtext()
+		let ftxto = leadingSpace.myfoldtext
 		return substitute(ftxto, ':', ': Preamble: ', '')
 	else
-		return leadingSpace.foldtext()
+		return leadingSpace.myfoldtext
 	end
 endfunction
 " }}}

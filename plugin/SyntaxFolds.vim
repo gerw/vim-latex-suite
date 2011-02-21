@@ -227,6 +227,10 @@ function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2
 			" call PrintError(lineBegin.' is being skipped')
 			continue
 		end
+		" Move to end of start pattern:
+		normal! 0
+		call search(a:startpat, 'cWe')
+
 		let lineEnd = s:MySearch(a:endpat, 'out')
 		while IsInSkippedRegion(lineEnd, a:skippedRegions) && lineEnd <= a:line2
 			let lineEnd = s:MySearch(a:endpat, 'out')
@@ -278,11 +282,8 @@ endfunction
 " MySearch: just like search(), but returns large number on failure {{{
 function! <SID>MySearch(pat, opt)
 	if a:opt == 'in'
-		if getline('.') =~ a:pat
-			let ret = line('.')
-		else
-			let ret = search(a:pat, 'W')
-		end
+			normal! 0
+			let ret = search(a:pat, 'cW')
 	else
 		normal! $
 		let ret = search(a:pat, 'W')

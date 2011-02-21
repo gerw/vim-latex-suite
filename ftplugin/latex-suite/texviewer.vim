@@ -59,6 +59,7 @@ function! Tex_Complete(what, where)
 		" What to do after <F9> depending on context
 		let s:curline = strpart(getline('.'), 0, col('.'))
 		let s:prefix = matchstr(s:curline, '.*{\zs.\{-}\(}\|$\)')
+		let s:refprefix = ''
 		" a command is of the type
 		" \psfig[option=value]{figure=}
 		" Thus
@@ -72,6 +73,21 @@ function! Tex_Complete(what, where)
 			let s:type = substitute(s:curline, pattern, '\1', 'e')
 			let s:typeoption = substitute(s:curline, pattern, '\2', 'e')
 			call Tex_Debug('Tex_Complete: s:type = '.s:type.', typeoption = '.s:typeoption, 'view')
+		else
+			let eqpattern = '^\(.*\s\|\)\((\(\w\|\.\)*\()\|$\)\)'
+			let otherpattern = '^\(.*[ \t{]\|\)\(\w*\.\(\w\|\.\)*\(\s\|$\)\)'
+			if s:curline =~ eqpattern
+				" User want to complete an equation reference
+				let s:type = 'eqref'
+				let s:prefix = substitute(s:curline, eqpattern, '\2', 'e')
+				let s:refprefix = '\eqref{'
+			elseif s:curline =~ otherpattern
+				" User want to complete theorem/remark/... reference
+				let s:type = 'autoref'
+				let s:prefix = substitute(s:curline, otherpattern, '\2', 'e')
+				let s:refprefix = '\autoref{'
+			else
+			endif
 		endif
 
 		if exists("s:type") && s:type =~ 'ref'
@@ -225,7 +241,7 @@ function! Tex_CompleteWord(completeword, prefixlength)
 		exe 'normal! a'.a:completeword."\<Esc>"
 	endif
 
-	if getline('.')[col('.')-1] !~ '{' && getline('.')[col('.')] !~ '}'
+	if a:completeword =~ '{' || ( getline('.')[col('.')-1] !~ '{' && getline('.')[col('.')] !~ '}' )
 		exe "normal! a}\<Esc>"
 	endif
 	
@@ -723,11 +739,31 @@ let s:path = expand('<sfile>:p:h')
 if has('python') && Tex_GetVarValue('Tex_UsePython')
 	python import sys, re
 	exec "python sys.path += [r'". s:path . "']"
-	python import outline
+	python import auxoutline
 endif
 
 function! Tex_StartOutlineCompletion()
 	let mainfname = Tex_GetMainFileName(':p')
+
+	if has('python') && Tex_GetVarValue('Tex_UsePython')
+		python retval = auxoutline.main(vim.eval("Tex_GetMainFileName(':p')"), vim.eval("s:prefix"))
+
+		" transfer variable from python to a local variable.
+		python vim.command("""let retval = "%s" """ % re.sub(r'"|\\', r'\\\g<0>', retval))
+	else
+		let retval = system(shellescape(s:path.'/auxoutline.py').' '.shellescape(mainfname).' '.shellescape(s:prefix))
+	endif
+
+	" Only one match => insert it directly
+	if retval !~ '\n'
+		if retval != ''
+			call Tex_CompleteWord( s:refprefix . retval , strlen(s:prefix) )
+		else
+			call Tex_SwitchToInsertMode()
+		endif
+		return
+	endif
+
 
 	" open the buffer
     let _report = &report
@@ -736,15 +772,6 @@ function! Tex_StartOutlineCompletion()
     set report=1000
     set cmdheight=1
     set lazyredraw
-
-	if has('python') && Tex_GetVarValue('Tex_UsePython')
-		python retval = outline.main(vim.eval("Tex_GetMainFileName(':p')"), vim.eval("s:prefix"))
-
-		" transfer variable from python to a local variable.
-		python vim.command("""let retval = "%s" """ % re.sub(r'"|\\', r'\\\g<0>', retval))
-	else
-		let retval = system(shellescape(s:path.'/outline.py').' '.shellescape(mainfname).' '.shellescape(s:prefix))
-	endif
 
     bot split __OUTLINE__
 	exec Tex_GetVarValue('Tex_OutlineWindowHeight', 15).' wincmd _'
@@ -809,13 +836,13 @@ function! Tex_FinishOutlineCompletion()
 	endif
 
 	if getline('.') =~ '^>'
-		let ref_complete = matchstr(getline('.'), '^>\s\+\zs\S\+\ze')
+		let ref_complete = matchstr(getline('.'), '^>\s*\zs\S\+\ze')
 	elseif getline('.') =~ '^:'
-		let ref_complete = matchstr(getline(line('.')-1), '^>\s\+\zs\S\+\ze')
+		let ref_complete = matchstr(getline(line('.')-1), '^>\s*\zs\S\+\ze')
 	endif
 
 	close
-	call Tex_CompleteWord(ref_complete, strlen(s:prefix))
+	call Tex_CompleteWord( s:refprefix . ref_complete, strlen(s:prefix))
 endfunction " }}}
 
 " ==============================================================================
@@ -1035,11 +1062,8 @@ endfunction " }}}
 " Tex_CompleteCiteEntry: completes cite entry {{{
 " Description: 
 function! Tex_CompleteCiteEntry()
-	normal! 0
-	call search('\[\S\+\]$', 'W')
-	if getline('.') !~ '\[\S\+\]$'
-		call search('\[\S\+\]$', 'bW')
-	endif
+	normal! $
+	call search('\[\S\+\]$', 'bc')
 	
 	if getline('.') !~ '\[\S\+\]$'
 		return
