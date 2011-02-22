@@ -14,15 +14,25 @@ exe 'so '.fnameescape(expand('<sfile>:p:h').'/wizardfuncs.vim')
 nmap <silent> <script> <plug> i
 imap <silent> <script> <C-o><plug> <Nop>
 
+if Tex_GetVarValue('Tex_EnvEndWithCR')
+	let s:end_with_cr = "\<CR>"
+else
+	let s:end_with_cr = ""
+end
+
+" The prefix of labels of figures
+let s:labelprefix_figure = Tex_GetVarValue("Tex_EnvLabelprefix_{'figure'}")
+let s:labelprefix_table = Tex_GetVarValue("Tex_EnvLabelprefix_{'table'}")
+
 " Define environments for IMAP evaluation " {{{
-let s:figure =     "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\psfig{figure=<+eps file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{fig:<+label+>}\<cr>\\end{figure}\<cr><++>"
-let s:figure_graphicx =    "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\includegraphics{<+file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{fig:<+label+>}\<cr>\\end{figure}\<cr><++>"
-let s:minipage =   "\\begin{minipage}[<+tb+>]{<+width+>}\<cr><++>\<cr>\\end{minipage}\<cr><++>"
-let s:picture =    "\\begin{picture}(<+width+>, <+height+>)(<+xoff+>,<+yoff+>)\<cr>\\put(<+xoff+>,<+yoff+>){\\framebox(<++>,<++>){<++>}}\<cr>\\end{picture}\<cr><++>"
-let s:list =       "\\begin{list}{<+label+>}{<+spacing+>}\<cr>\\item <++>\<cr>\\end{list}\<cr><++>"
-let s:table =      "\\begin{table}\<cr>\\centering\<cr>\\begin{tabular}{<+dimensions+>}\<cr><++>\<cr>\\end{tabular}\<cr>\\caption{<+Caption text+>}\<cr>\\label{tab:<+label+>}\<cr>\\end{table}\<cr><++>"
+let s:figure =     "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\psfig{figure=<+eps file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{" . s:labelprefix_figure . "<+label+>}\<cr>\\end{figure}" . s:end_with_cr . "<++>"
+let s:figure_graphicx =    "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\includegraphics{<+file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{" . s:labelprefix_figure . "<+label+>}\<cr>\\end{figure}" . s:end_with_cr . "<++>"
+let s:minipage =   "\\begin{minipage}[<+tb+>]{<+width+>}\<cr><++>\<cr>\\end{minipage}" . s:end_with_cr . "<++>"
+let s:picture =    "\\begin{picture}(<+width+>, <+height+>)(<+xoff+>,<+yoff+>)\<cr>\\put(<+xoff+>,<+yoff+>){\\framebox(<++>,<++>){<++>}}\<cr>\\end{picture}" . s:end_with_cr . "<++>"
+let s:list =       "\\begin{list}{<+label+>}{<+spacing+>}\<cr>\\item <++>\<cr>\\end{list}" . s:end_with_cr . "<++>"
+let s:table =      "\\begin{table}\<cr>\\centering\<cr>\\begin{tabular}{<+dimensions+>}\<cr><++>\<cr>\\end{tabular}\<cr>\\caption{<+Caption text+>}\<cr>\\label{" . s:labelprefix_table . "<+label+>}\<cr>\\end{table}" . s:end_with_cr . "<++>"
 let s:array =      "\\left<++>\<cr>\\begin{array}{<+dimension+>}\<cr><+elements+>\<cr>\\end{array}\<cr>\\right<++>"
-let s:description ="\\begin{description}\<cr>\\item[<+label+>]<++>\<cr>\\end{description}\<cr><++>"
+let s:description ="\\begin{description}\<cr>\\item[<+label+>]<++>\<cr>\\end{description}" . s:end_with_cr . "<++>"
 let s:document =   "\\documentclass[<+options+>]{<+class+>}\<cr>\<cr>\\begin{document}\<cr><++>\<cr>\\end{document}"
 let s:tabular = "\\begin{tabular}[<+hbtp+>]{<+format+>}\<cr><++>\<cr>\\end{tabular}"
 let s:tabular_star = "\\begin{tabular*}[<+hbtp+>]{<+format+>}\<cr><++>\<cr>\\end{tabular*}"
@@ -134,14 +144,14 @@ function! <SID>Tex_SectionMacros(lhs, name)
 
 	if g:Tex_SectionMaps && !exists('s:doneOnce')
 		exe 'vnoremap '.vlhs.' '.vrhs
-		call IMAP (a:lhs, "\\".a:name.'{<++>}<++>', 'tex')
+		call IMAP (a:lhs, "\\".a:name.'{<++>}' . s:end_with_cr . '<++>', 'tex')
 	endif
 
 	if g:Tex_Menus && g:Tex_SectionMenus
 		let location = g:Tex_EnvMenuLocation.'Sections.'.a:name.'<tab>'.a:lhs.'\ ('.vlhs.')'
 		let advlocation = g:Tex_EnvMenuLocation.'Sections.Advanced.'.a:name
 
-		let irhs = "\<C-r>=IMAP_PutTextWithMovement('\\".a:name."{<++>}<++>')\<CR>"
+		let irhs = "\<C-r>=IMAP_PutTextWithMovement('\\".a:name."{<++>}" . s:end_with_cr . "<++>')\<CR>"
 
 		let advirhs = "\<C-r>=Tex_InsSecAdv('".a:name."')\<CR>"
 		let advvrhs = "\<C-\\>\<C-N>:call Tex_VisSecAdv('".a:name."')\<CR>"
@@ -286,7 +296,7 @@ endif
 " ============================================================================== 
 " Tex_itemize: {{{
 function! Tex_itemize(env)
-	return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr>\\item <++>\<cr>\\end{".a:env."}\<cr><++>")
+	return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr>\\item <++>\<cr>\\end{".a:env."}" . s:end_with_cr . "<++>")
 endfunction
 " }}} 
 " Tex_description: {{{
@@ -296,7 +306,7 @@ function! Tex_description(env)
 		if itlabel != ''
 			let itlabel = '['.itlabel.']'
 		endif
-		return IMAP_PutTextWithMovement("\\begin{description}\<cr>\\item".itlabel." <++>\<cr>\\end{description}\<cr><++>")
+		return IMAP_PutTextWithMovement("\\begin{description}\<cr>\\item".itlabel." <++>\<cr>\\end{description}" . s:end_with_cr . "<++>")
 	else
 		return IMAP_PutTextWithMovement(s:description)
 	endif
@@ -325,7 +335,7 @@ function! Tex_figure(env)
 			let caption = '\caption{'.caption."}\<cr>"
 		endif
 		if label != ''
-			let label = '\label{fig:'.label."}\<cr>"
+			let label = '\label{' . s:labelprefix_figure . label . "}\<cr>"
 		endif
 		if center == 'y' || center == ''
 			let centr = '\centering' . "\<cr>"
@@ -334,7 +344,7 @@ function! Tex_figure(env)
 		end
 		let figure = '\begin{'.a:env.'}'.flto
 		let figure = figure . centr . pic . caption . label
-		let figure = figure . '\end{'.a:env.'}'
+		let figure = figure . '\end{'.a:env.'}' . s:end_with_cr
 		return IMAP_PutTextWithMovement(figure)
 	else
 		if g:Tex_package_detected =~ '\<graphicx\>'
@@ -372,14 +382,14 @@ function! Tex_table(env)
 		if format == ''
 			let format = '<++>'
 		endif
-		let ret = ret.foo.'{'.format."}\<cr><++>\<cr>\\end{tabular}\<cr><++>"
+		let ret = ret.foo.'{'.format."}\<cr><++>\<cr>\\end{tabular}" . s:end_with_cr . "<++>"
 		if caption != ''
 			let ret=ret.'\caption{'.caption."}\<cr>"
 		endif
 		if label != ''
-			let ret=ret.'\label{tab:'.label."}\<cr>"
+			let ret=ret.'\label{' s:labelprefix_table . label."}\<cr>"
 		endif
-		let ret=ret."\\end{table}\<cr><++>"
+		let ret=ret."\\end{table}" . s:end_with_cr . "<++>"
 		return IMAP_PutTextWithMovement(ret)
 	else
 		return IMAP_PutTextWithMovement(s:table)
@@ -397,9 +407,9 @@ function! Tex_tabular(env)
 		if format != ''
 		  let format = '{'.format.'}'
 		endif
-		return IMAP_PutTextWithMovement('\begin{'.a:env.'}'.pos.format."\<cr> \<cr>\\end{".a:env.'}\<cr><++>')
+		return IMAP_PutTextWithMovement('\begin{'.a:env.'}'.pos.format."\<cr> \<cr>\\end{".a:env.'}' . s:end_with_cr . '<++>')
 	else
-		return IMAP_PutTextWithMovement('\begin{'.a:env.'}[<+position+>]{<+format+>}'."\<cr><++>\<cr>\\end{".a:env.'}\<cr><++>')
+		return IMAP_PutTextWithMovement('\begin{'.a:env.'}[<+position+>]{<+format+>}'."\<cr><++>\<cr>\\end{".a:env.'}' . s:end_with_cr . '<++>')
 	endif
 endfunction
 " }}} 
@@ -417,20 +427,19 @@ function! Tex_eqnarray(env)
 			let arrlabel = ''
 		endif
 	else
-		if exists("b:Tex_Env_labelprefix_{'".a:env."'}")
-			let labelprefix = b:Tex_Env_labelprefix_{a:env}
-		elseif exists("g:Tex_Env_labelprefix_{'".a:env."'}")
-			let labelprefix = g:Tex_Env_labelprefix_{a:env}
-		else
-			let labelprefix = ""
-		endif
 		if a:env !~ '\*'
+			let labelprefix = Tex_GetVarValue("Tex_EnvLabelprefix_{'".a:env."'}")
 			let arrlabel = "\\label{".labelprefix."<+label+>}\<cr>"
 		else
 			let arrlabel = ""
 		endif
+		if Tex_GetVarValue("Tex_LabelAfterContent")
+			let content = "<+content+>\<cr>" . arrlabel
+		else
+			let content = arrlabel . "<+content+>\<cr>"
+		end
 	endif
-	return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr>".arrlabel."<+content+>\<cr>\\end{".a:env."}\<cr><++>")
+	return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr>".content."\\end{".a:env."}" . s:end_with_cr . "<++>")
 endfunction
 " }}} 
 " Tex_list: {{{
@@ -446,7 +455,7 @@ function! Tex_list(env)
 		else
 			let label = ''
 		endif
-		return IMAP_PutTextWithMovement('\begin{list}'.label."\<cr>\\item \<cr>\\end{list}\<cr><++>")
+		return IMAP_PutTextWithMovement('\begin{list}'.label."\<cr>\\item \<cr>\\end{list}" . s:end_with_cr . "<++>")
 	else
 		return IMAP_PutTextWithMovement(s:list)
 	endif
@@ -480,7 +489,7 @@ function! Tex_minipage(env)
 		else
 			let  foo = foo.'['.pos.']{'.width.'}'
 		endif
-		return IMAP_PutTextWithMovement(foo."\<cr><++>\<cr>\\end{minipage}\<cr><++>")
+		return IMAP_PutTextWithMovement(foo."\<cr><++>\<cr>\\end{minipage}" . s:end_with_cr . "<++>")
 	else
 		return IMAP_PutTextWithMovement(s:minipage)
 	endif
@@ -499,13 +508,13 @@ function! Tex_thebibliography(env)
 			let bar = bar.'['.biblabel.']'
 		endif
 		let bar = bar.'{'.key.'}'
-		return IMAP_PutTextWithMovement('\begin{thebibliography}'.foo."\<cr>".bar." \<cr>\\end{thebibliography}\<cr><++>\<Up>")
+		return IMAP_PutTextWithMovement('\begin{thebibliography}'.foo."\<cr>".bar." \<cr>\\end{thebibliography}" . s:end_with_cr . "<++>\<Up>")
 	else
 		return IMAP_PutTextWithMovement(
 			\ "\\begin{thebibliography}\<CR>".
 			\ "\\bibitem[<+biblabel+>]{<+bibkey+>} <++>\<CR>".
 			\ "<++>\<CR>".
-			\ "\\end{thebibliography}\<cr><++>")
+			\ "\\end{thebibliography}" . s:end_with_cr . "<++>")
 	endif
 endfunction
 " }}} 
@@ -585,7 +594,7 @@ function! Tex_PutEnvironment(env)
 		elseif a:env == '$$'
 			return IMAP_PutTextWithMovement('$$<++>$$')
 		elseif a:env == '\['
-			return IMAP_PutTextWithMovement("\\[\<CR><++>\<CR>\\]<++>")
+			return IMAP_PutTextWithMovement("\\[\<CR><++>\<CR>\\]" . s:end_with_cr . "<++>")
 		else
 			" Look in supported packages if exists template for environment
 			" given in the line
@@ -609,7 +618,7 @@ function! Tex_PutEnvironment(env)
 		endif
 		" If nothing before us managed to create an environment, then just
 		" create a bare-bones environment from the name.
-		return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr><++>\<cr>\\end{".a:env."}\<cr><++>")
+		return IMAP_PutTextWithMovement('\begin{'.a:env."}\<cr><++>\<cr>\\end{".a:env."}" . s:end_with_cr . "<++>")
 	endif
 endfunction " }}}
 " Mapping the <F5> key to insert/prompt for an environment/package {{{
@@ -770,29 +779,29 @@ if g:Tex_PromptedEnvironments != ''
 		let start_col = virtcol('.')
 
 		if a:env == '['
-			" if b:DoubleDollars == 0
+			if b:DoubleDollars == 0
 				let first = '\\['
 				let second = '\\]'
-			" else
-			" 	let first = '$$'
-			" 	let second = '$$'
-			" endif
+			else
+				let first = '$$'
+				let second = '$$'
+			endif
 		else
 			let first = '\\begin{' . a:env . '}'
 			let second = '\\end{' . a:env . '}'
 		endif
 
-		" if b:DoubleDollars == 0
+		if b:DoubleDollars == 0
 			let bottom = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','')
 			s/\\\]\|\\end{.\{-}}/\=second/
 			let top = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','b')
 			s/\\\[\|\\begin{.\{-}}/\=first/
-		" else
-		" 	let bottom = search('\$\$\|\\end{')
-		" 	s/\$\$\|\\end{.\{-}}/\=second/
-		" 	let top = search('\$\$\|\\begin{','b')
-		" 	s/\$\$\|\\begin{.\{-}}/\=first/
-		" end
+		else
+			let bottom = search('\$\$\|\\end{')
+			s/\$\$\|\\end{.\{-}}/\=second/
+			let top = search('\$\$\|\\begin{','b')
+			s/\$\$\|\\begin{.\{-}}/\=first/
+		end
 		if a:delete != ''
 			exe 'silent '. top . "," . bottom . 's/' . a:delete . '//e'
 		endif
