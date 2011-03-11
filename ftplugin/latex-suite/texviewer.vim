@@ -74,17 +74,17 @@ function! Tex_Complete(what, where)
 			let s:typeoption = substitute(s:curline, pattern, '\2', 'e')
 			call Tex_Debug('Tex_Complete: s:type = '.s:type.', typeoption = '.s:typeoption, 'view')
 		else
-			let eqpattern = '^\(.*\s\|\)\((\(\w\|\.\)*\()\|$\)\)'
-			let otherpattern = '^\(.*[ \t{]\|\)\(\w*\.\(\w\|\.\)*\(\s\|$\)\)'
+			let eqpattern = '^.\{-}\((\(\w\|\.\)*)\?\)$'
+			let otherpattern = '^.\{-}\(\w*\.\(\w\|\.\)*\)$'
 			if s:curline =~ eqpattern
 				" User want to complete an equation reference
 				let s:type = 'eqref'
-				let s:prefix = substitute(s:curline, eqpattern, '\2', 'e')
+				let s:prefix = substitute(s:curline, eqpattern, '\1', '')
 				let s:refprefix = '\eqref{'
 			elseif s:curline =~ otherpattern
 				" User want to complete theorem/remark/... reference
 				let s:type = 'autoref'
-				let s:prefix = substitute(s:curline, otherpattern, '\2', 'e')
+				let s:prefix = substitute(s:curline, otherpattern, '\1', '')
 				let s:refprefix = '\autoref{'
 			else
 			endif
@@ -93,6 +93,7 @@ function! Tex_Complete(what, where)
 		if exists("s:type") && s:type =~ 'ref'
 			if Tex_GetVarValue('Tex_UseOutlineCompletion') == 1
 				call Tex_Debug("Tex_Complete: using outline search method", "view")
+				call Tex_Debug("Tex_Complete: searching for prefix ". s:prefix, "view")
 				call Tex_StartOutlineCompletion()
 
 			elseif Tex_GetVarValue('Tex_UseSimpleLabelSearch') == 1
