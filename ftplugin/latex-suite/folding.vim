@@ -298,8 +298,7 @@ function! MakeTexFolds(force)
 			\ '^\s*\\frontmatter\|^\s*\\mainmatter\|^\s*\\backmatter\|'
 			\. '^\s*\\begin{thebibliography\|>>>\|^\s*\\endinput\|'
 			\. '^\s*\\begin{slide\|^\s*\\end{document\|'
-			\. '^\n*\s*\\\(begin\|end\){appendix}'
-			\. '\|^\_s*\(^[^%]*\\begin{frame}\)\(\_.\(^[^%]*\\begin{frame}\)\@!\)*\\bibliography')
+			\. '^\n*\s*\\\(\(begin\|end\){appendix}\|\\appendix\)')
 	endif
 	" }}} 
 	
