@@ -53,7 +53,19 @@ function! Tex_FoldSections(lst, endpat)
 	if s =~ '%%fakesection'
 		let s = '^\s*' . s
 	else
-		let s = '^\%(%[ =-]*\n\)\?\s*\\' . s . '\W\|^\s*%%fake' . s
+		" The KOMA script classes have the additional commands
+		" \addpart \addchap and \addsec
+		if s =~ '^\%(part\|chapter\|section\)$'
+			if s =~ 'section'
+				let salt = 'addsec'
+			else
+				let salt = 'add' . strpart( s, 0, 4 )
+			endif
+			let pat = '\\\%(' . s . '\|' . salt . '\)' 
+		else
+			let pat = '\\' . s
+		endif
+		let s = '^\%(%[ =-]*\n\)\?\s*' . pat . '\W\|^\s*%%fake' . s
 		" let s = '^\s*\\' . s . '\W'
 	endif
 	let endpat = s . '\|' . a:endpat
