@@ -442,7 +442,7 @@ function! IMAP_Jumpfunc(direction, inclusive)
 	let movement = "\<C-o>v".nmove."l"
 
 	" Leave (insert)-visual mode and reselect.
-	let movement .= movement."\<C-\>\<C-N>gv"
+	let movement .= "\<C-\>\<C-N>gv"
 
 	" Now either goto insert mode or select mode.
 	if placeHolderEmpty && g:Imap_DeleteEmptyPlaceHolders
