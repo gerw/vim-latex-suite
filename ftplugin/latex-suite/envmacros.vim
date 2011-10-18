@@ -237,6 +237,7 @@ call s:Tex_EnvMacros('EES', '&Math.', 'equation*')
 call s:Tex_EnvMacros('EMA', '&Math.', 'math')
 call s:Tex_EnvMacros('EAL', '&Math.', 'align')
 call s:Tex_EnvMacros('EAS', '&Math.', 'align*')
+call s:Tex_EnvMacros('EAD', '&Math.', 'aligned')
 " }}}
 " Structure {{{
 call s:Tex_SpecialMacros('EAR', 'Math.', 'array', s:array)
