@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:     LaTeX
 " Maintainer:   Johannes Tanzler <johannes.tanzler@gmail.com>
-" Version: 	0.5
+" Version: 	0.5-gerw
 " Created:      Sat, 16 Feb 2002 16:50:19 +0100
 " Last Change:	Mar, 27 Jun 2011 11:46:35 +0200
 " Last Update:  18th feb 2002, by LH :
@@ -131,7 +131,22 @@ let g:tex_items = '^\s*' . g:tex_items
 if exists("*GetTeXIndent") | finish
 endif
 
-
+" Counts matches of a regexp <rexp> in line number <line>.
+" Doesn't count matches inside strings and comments (as defined by current
+" syntax).
+" Copied from http://vim.cybermirror.org/runtime/indent/pov.vim
+function! MatchCount(line, rexp)
+  let str = getline(a:line)
+  let i = 0
+  let n = 0
+  while i >= 0
+    let i = matchend(str, a:rexp, i)
+    if i >= 0 && synIDattr(synID(a:line, i, 0), "name") !~? "string\|comment"
+      let n = n + 1
+    endif
+  endwhile
+  return n
+endfunction
 
 function GetTeXIndent()
 
@@ -190,16 +205,15 @@ function GetTeXIndent()
     endif
 
     if g:tex_indent_brace
-      " Add a 'shiftwidth' after a "{" or "[" while there are not "}" and "]"
-      " after them. \m for magic
-        if line =~ '\m\(\(\[[^\]]*\)\|\({[^}]*\)\)$'
-            let ind = ind + &sw
-        endif
-      " Remove a 'shiftwidth' after a "}" or "]" while there are not "{" and "["
-      " before them. \m for magic
-        if cline =~ '\m^\(\([^\[]*\]\)\|\([^{]*}\)\)'
-            let ind = ind - &sw
-        endif
+      " Add a 'shiftwidth' per "{" or "[" on the previous line.
+      " \m for magic
+      let count_braces = max([0, MatchCount(lnum, '[{\[]') - MatchCount(lnum, '[}\]]')])
+      let ind = ind + &sw * count_braces
+
+      " Remove a 'shiftwidth' per "}" or "]" on the previous line.
+      " \m for magic
+      let count_braces = max([0, MatchCount(v:lnum, '[}\]]') - MatchCount(v:lnum, '[{\[]')])
+      let ind = ind - &sw * count_braces
     endif
 
 
