@@ -207,12 +207,12 @@ function GetTeXIndent()
     if g:tex_indent_brace
       " Add a 'shiftwidth' per "{" or "[" on the previous line.
       " \m for magic
-      let count_braces = max([0, MatchCount(lnum, '[{\[]') - MatchCount(lnum, '[}\]]')])
+      let count_braces = max([0, MatchCount(lnum, '[{[]') - MatchCount(lnum, '[}\]]')])
       let ind = ind + &sw * count_braces
 
       " Remove a 'shiftwidth' per "}" or "]" on the previous line.
       " \m for magic
-      let count_braces = max([0, MatchCount(v:lnum, '[}\]]') - MatchCount(v:lnum, '[{\[]')])
+      let count_braces = max([0, MatchCount(v:lnum, '[}\]]') - MatchCount(v:lnum, '[{[]')])
       let ind = ind - &sw * count_braces
     endif
 
