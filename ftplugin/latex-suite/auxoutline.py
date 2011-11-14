@@ -16,14 +16,16 @@ def getFileContents(fname):
     if type(fname) is not str:
         fname = fname.group(1)
 
-    # If neither the file or file.aux exists, then we just give up.
-    fname = re.sub('\.tex$','',fname)
+    # Strategy for determining the name of the aux file:
+    # If the suffix is '.tex' then throw it away.
+    # If the suffix is not '.aux' then add '.aux'.
+    fname = re.sub(r'\.tex$','',fname)
+    if not re.search(r'\.aux$', fname):
+        fname += '.aux'
     if not os.path.isfile(fname):
-        if os.path.isfile(fname + '.aux'):
-            fname += '.aux'
-        else:
-            return ''
+        return ''
 
+    # Now we are in position to scan the file.
     try:
         # This longish thing is to make sure that all files are converted into
         # \n seperated lines.
