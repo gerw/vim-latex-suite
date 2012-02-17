@@ -56,10 +56,10 @@ function! Tex_FoldSections(lst, endpat)
 		let pattern = ''
 		let prefix = ''
 		for label in split( s, "|" )
-			let pattern .= prefix . label . '\|' . '%%fake' . label
+			let pattern .= prefix . '\\' . label . '\|' . '%%fake' . label
 			let prefix = '\|'
 		endfor
-		let s = '^\%(%[ =-]*\n\)\?\s*' . '\\%(' . pat . '\)' . '\W'
+		let s = '^\%(%[ =-]*\n\)\?\s*' . '\%(' . pattern . '\)' . '\W'
 	endif
 	let endpat = s . '\|' . a:endpat
 	if i > 0
