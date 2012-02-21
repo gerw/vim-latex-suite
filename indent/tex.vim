@@ -123,7 +123,7 @@ endif
 setlocal autoindent
 setlocal nosmartindent
 setlocal indentexpr=GetTeXIndent()
-exec 'setlocal indentkeys+=},]' . substitute(g:tex_items, '^\|\(\\|\)', ',=', 'g')
+exec 'setlocal indentkeys+=},],.,)' . substitute(g:tex_items, '^\|\(\\|\)', ',=', 'g')
 let g:tex_items = '^\s*' . g:tex_items
 
 
@@ -205,14 +205,15 @@ function GetTeXIndent()
     endif
 
     if g:tex_indent_brace
-      " Add a 'shiftwidth' per "{" or "[" on the previous line.
-      " \m for magic
-      let count_braces = max([0, MatchCount(lnum, '[{[]') - MatchCount(lnum, '[}\]]')])
+      let pattern_open = '\([[{(]\|\\left\.\)'
+      let pattern_close = '\([]})]\|\\right\.\)'
+
+      " Add a 'shiftwidth' per "{" or "[" or "(" or "\left." on the previous line.
+      let count_braces = max([0, MatchCount(lnum, pattern_open) - MatchCount(lnum, pattern_close)])
       let ind = ind + &sw * count_braces
 
-      " Remove a 'shiftwidth' per "}" or "]" on the previous line.
-      " \m for magic
-      let count_braces = max([0, MatchCount(v:lnum, '[}\]]') - MatchCount(v:lnum, '[{[]')])
+      " Remove a 'shiftwidth' per "}" or "]" or ")" or "\right." on the current line.
+      let count_braces = max([0, MatchCount(v:lnum, pattern_close) - MatchCount(v:lnum, pattern_open)])
       let ind = ind - &sw * count_braces
     endif
 
