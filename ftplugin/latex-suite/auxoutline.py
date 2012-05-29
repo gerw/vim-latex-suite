@@ -125,12 +125,16 @@ def getSectionLabels(lineinfo,
           # This section contains labels
           # Let us determine the section number and the section heading
           o1 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}' % sectypes[0] , sections[i])
-          o2 = re.search( r'{%s}{(.*?)}' % sectypes[0] , sections[i])
+          o2 = re.search( r'{%s}{\\tocsection {}{.*?}{(.*?)}' % sectypes[0] , sections[i]) # amsart
+          o3 = re.search( r'{%s}{(.*?)}' % sectypes[0] , sections[i])
           if o1:
             section_name = o1.group(3)
             section_number = o1.group(2) + ' '
           elif o2:
             section_name = o2.group(1)
+            section_number = ''
+          elif o3:
+            section_name = o3.group(1)
             section_number = ''
           else:
             print 'Unknown heading format "%s"' % sections[i]
