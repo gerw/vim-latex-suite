@@ -174,35 +174,28 @@ function GetTeXIndent()
         return indent(v:lnum)
     endif
 
-    " Add a 'shiftwidth' after beginning of environments.
+    " Add a 'shiftwidth' after beginning
+    " and substract a 'shiftwidth' after the end of environments.
     " Don't add it for \begin{document} and \begin{verbatim}
-    ""if line =~ '^\s*\\begin{\(.*\)}'  && line !~ 'verbatim' 
-    " LH modification : \begin does not always start a line
-    if line =~ '\\begin{.*}'  && line !~ g:tex_noindent_env
+    let env_open = '\\begin{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
+    let env_close = '\\end{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
 
-        let ind = ind + &sw
+    let count_braces = max([0, MatchCount(lnum, env_open) - MatchCount(lnum, env_close)])
+    let ind = ind + &sw * count_braces
 
-        if g:tex_indent_items
-            " Add another sw for item-environments
-            if line =~ g:tex_itemize_env
-                let ind = ind + &sw
-            endif
-        endif
-    endif
+    let count_braces = max([0, MatchCount(v:lnum, env_close) - MatchCount(v:lnum, env_open)])
+    let ind = ind - &sw * count_braces
 
+    " For itemize-like environments: add or subtract an additional sw
+    let env_item_open = '\\begin{\('.g:tex_itemize_env.'\)\*\?}'
+    let env_item_close = '\\end{\('.g:tex_itemize_env.'\)\*\?}'
 
-    " Subtract a 'shiftwidth' when an environment ends
-    if cline =~ '^\s*\\end' && cline !~ g:tex_noindent_env
+    let count_braces = max([0, MatchCount(lnum, env_item_open) - MatchCount(lnum, env_item_close)])
+    let ind = ind + &sw * count_braces
 
-        if g:tex_indent_items
-            " Remove another sw for item-environments
-            if cline =~ g:tex_itemize_env
-                let ind = ind - &sw
-            endif
-        endif
+    let count_braces = max([0, MatchCount(v:lnum, env_item_close) - MatchCount(v:lnum, env_item_open)])
+    let ind = ind - &sw * count_braces
 
-        let ind = ind - &sw
-    endif
 
     if g:tex_indent_brace
       let pattern_open = '\([[{(]\|\\left\.\)'
