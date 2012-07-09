@@ -134,7 +134,7 @@ endif
 " Counts matches of a regexp <rexp> in line number <line>.
 " Doesn't count matches inside strings and comments (as defined by current
 " syntax).
-" Copied from http://vim.cybermirror.org/runtime/indent/pov.vim
+" Copied indent/pov.vim that ships with vim
 function! MatchCount(line, rexp)
   let str = getline(a:line)
   let i = 0
@@ -177,24 +177,20 @@ function GetTeXIndent()
     " Add a 'shiftwidth' after beginning
     " and substract a 'shiftwidth' after the end of environments.
     " Don't add it for \begin{document} and \begin{verbatim}
-    let env_open = '\\begin{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
-    let env_close = '\\end{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
+    let env_open = '\\begin\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
+    let env_close = '\\end\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
 
-    let count_braces = max([0, MatchCount(lnum, env_open) - MatchCount(lnum, env_close)])
-    let ind = ind + &sw * count_braces
-
-    let count_braces = max([0, MatchCount(v:lnum, env_close) - MatchCount(v:lnum, env_open)])
-    let ind = ind - &sw * count_braces
+    let count_env_open = max([0, MatchCount(lnum, env_open) - MatchCount(lnum, env_close)])
+    let count_env_close = max([0, MatchCount(v:lnum, env_close) - MatchCount(v:lnum, env_open)])
+    let ind = ind + &sw * ( count_env_open - count_env_close )
 
     " For itemize-like environments: add or subtract an additional sw
-    let env_item_open = '\\begin{\('.g:tex_itemize_env.'\)\*\?}'
-    let env_item_close = '\\end{\('.g:tex_itemize_env.'\)\*\?}'
+    let env_item_open = '\\begin\s*{\('.g:tex_itemize_env.'\)\*\?}'
+    let env_item_close = '\\end\s*{\('.g:tex_itemize_env.'\)\*\?}'
 
-    let count_braces = max([0, MatchCount(lnum, env_item_open) - MatchCount(lnum, env_item_close)])
-    let ind = ind + &sw * count_braces
-
-    let count_braces = max([0, MatchCount(v:lnum, env_item_close) - MatchCount(v:lnum, env_item_open)])
-    let ind = ind - &sw * count_braces
+    let count_env_item_open = max([0, MatchCount(lnum, env_item_open) - MatchCount(lnum, env_item_close)])
+    let count_env_item_close = max([0, MatchCount(v:lnum, env_item_close) - MatchCount(v:lnum, env_item_open)])
+    let ind = ind + &sw * ( count_env_item_open - count_env_item_close )
 
 
     if g:tex_indent_brace
@@ -202,12 +198,11 @@ function GetTeXIndent()
       let pattern_close = '\([]})]\|\\right\.\)'
 
       " Add a 'shiftwidth' per "{" or "[" or "(" or "\left." on the previous line.
-      let count_braces = max([0, MatchCount(lnum, pattern_open) - MatchCount(lnum, pattern_close)])
-      let ind = ind + &sw * count_braces
-
+      let count_braces_open = max([0, MatchCount(lnum, pattern_open) - MatchCount(lnum, pattern_close)])
       " Remove a 'shiftwidth' per "}" or "]" or ")" or "\right." on the current line.
-      let count_braces = max([0, MatchCount(v:lnum, pattern_close) - MatchCount(v:lnum, pattern_open)])
-      let ind = ind - &sw * count_braces
+      let count_braces_close = max([0, MatchCount(v:lnum, pattern_close) - MatchCount(v:lnum, pattern_open)])
+
+      let ind = ind + &sw * ( count_braces_open - count_braces_close )
     endif
 
 
