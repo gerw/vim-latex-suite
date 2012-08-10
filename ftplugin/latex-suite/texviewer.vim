@@ -74,7 +74,7 @@ function! Tex_Complete(what, where)
 			let s:typeoption = substitute(s:curline, pattern, '\2', 'e')
 			call Tex_Debug('Tex_Complete: s:type = '.s:type.', typeoption = '.s:typeoption, 'view')
 		else
-			let eqpattern = '^.\{-}\((\%(theorem\|lemma\|definition\|remark\|proposition\|corollary\|assumption\|figure\|table\|algorithm\|part\|chapter\|section\|subsection\|subsubsection\|paragraph\|subparagraph\|\)\@!\(\w\|\.\)*)\?\)$'
+			let eqpattern = '^.\{-}\((\%(theorem\|lemma\|definition\|remark\|proposition\|corollary\|assumption\|figure\|table\|algorithm\|part\|chapter\|section\|subsection\|subsubsection\|paragraph\|subparagraph\)\@!\(\w\|\.\)*)\?\)$'
 			let otherpattern = '^.\{-}\(\w*\.\(\w\|\.\)*\)$'
 			if s:curline =~ eqpattern
 				" User want to complete an equation reference
