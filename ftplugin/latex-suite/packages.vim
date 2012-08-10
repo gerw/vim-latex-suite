@@ -193,9 +193,12 @@ function! Tex_pack_updateall(force)
 		" modified etc.
 		split
 
-		call Tex_Debug(':Tex_pack_updateall: silent! find '.Tex_EscapeSpaces(packname).'.sty', 'pack')
 		let thisbufnum = bufnr('%')
-		exec 'silent! find '.Tex_EscapeSpaces(packname).'.sty'
+		call Tex_Debug(':Tex_pack_updateall: findfile("'.Tex_EscapeSpaces(packname).'.sty")', 'pack')
+		let package_file = findfile( Tex_EscapeSpaces(packname) .'.sty' )
+
+		call Tex_Debug(':Tex_pack_updateall: found "'. package_file .'"', 'pack')
+		exec 'view ' . package_file
 		call Tex_Debug(':Tex_pack_updateall: present file = '.bufname('%'), 'pack')
 
 		" If this file was not found, assume that it means its not a
