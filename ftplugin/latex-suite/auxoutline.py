@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 # Part of Latex-Suite
 #
@@ -40,6 +41,12 @@ def getFileContents(fname):
 
     return contents
 
+# }}}
+# utfify {{{
+def utfify(text):
+	for (pat,rep) in [['a','ä'],['o','ö'],['u','ü'],['A','Ä'],['O','Ö'],['U','Ü']]:
+		text = [re.sub(r'\\IeC {\\"' + pat + '}', rep, line) for line in text]
+	return text
 # }}}
 # stripComments {{{
 def stripComments(contents):
@@ -122,17 +129,18 @@ def getSectionLabels(lineinfo,
         section_label_text = getSectionLabels(sections[i+1], sectypes[1:], section_prefix+1, label_prefix, value_prefix)
 
         if section_label_text:
+          print sections[i]
           # This section contains labels
           # Let us determine the section number and the section heading
-          o1 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}' % sectypes[0] , sections[i])
-          o2 = re.search( r'{%s}{\\tocsection {}{.*?}{(.*?)}' % sectypes[0] , sections[i]) # amsart
+          o1 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}{[^{}]*}{[^{}]*}}$' % sectypes[0] , sections[i])
+          o2 = re.search( r'{%s}{\\toc(section|chapter) {(.*?)}{(.*?)}{(.*?)}' % sectypes[0] , sections[i]) # amsart,amsbook
           o3 = re.search( r'{%s}{(.*?)}' % sectypes[0] , sections[i])
           if o1:
             section_name = o1.group(3)
             section_number = o1.group(2) + ' '
           elif o2:
-            section_name = o2.group(1)
-            section_number = ''
+            section_name = o2.group(4)
+            section_number =  o2.group(2) + ' ' + o2.group(3) + ': '
           elif o3:
             section_name = o3.group(1)
             section_number = ''
@@ -158,9 +166,10 @@ def main(fname, prefix):
 
     contents = getFileContents(fname)
     nonempty = stripComments(contents)
+    utftext = utfify(nonempty)
 
     lineinfo = ''
-    for line in nonempty:
+    for line in utftext:
         lineinfo += line + '\n'
 
     
