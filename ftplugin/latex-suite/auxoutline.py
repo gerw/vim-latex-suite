@@ -44,8 +44,8 @@ def getFileContents(fname):
 # }}}
 # utfify {{{
 def utfify(text):
-	for (pat,rep) in [['a','ä'],['o','ö'],['u','ü'],['A','Ä'],['O','Ö'],['U','Ü']]:
-		text = [re.sub(r'\\IeC {\\"' + pat + '}', rep, line) for line in text]
+	for (pat,rep) in [['"a','ä'],['"o','ö'],['"u','ü'],['"A','Ä'],['"O','Ö'],['"U','Ü'], ['\'e', 'é']]:
+		text = [re.sub(r'\\IeC {\\' + pat + '}', rep, line) for line in text]
 	return text
 # }}}
 # stripComments {{{
@@ -129,20 +129,26 @@ def getSectionLabels(lineinfo,
         section_label_text = getSectionLabels(sections[i+1], sectypes[1:], section_prefix+1, label_prefix, value_prefix)
 
         if section_label_text:
-          print sections[i]
           # This section contains labels
           # Let us determine the section number and the section heading
-          o1 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}{[^{}]*}{[^{}]*}}$' % sectypes[0] , sections[i])
-          o2 = re.search( r'{%s}{\\toc(section|chapter) {(.*?)}{(.*?)}{(.*?)}' % sectypes[0] , sections[i]) # amsart,amsbook
-          o3 = re.search( r'{%s}{(.*?)}' % sectypes[0] , sections[i])
+          o1 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}{[^{}]*}{[^{}]*}}$' % sectypes[0] , sections[i]) # With hyperref
+          o2 = re.search( r'{%s}{\\numberline {(\\relax )?(.*?)}(.*?)}' % sectypes[0] , sections[i]) # Without hyperref
+          o3 = re.search( r'{%s}{\\toc(section|chapter) {(.*?)}{(.*?)}{(.*?)}' % sectypes[0] , sections[i]) # amsart,amsbook
+          o4 = re.search( r'{%s}{(.*?)}' % sectypes[0] , sections[i])
           if o1:
             section_name = o1.group(3)
             section_number = o1.group(2) + ' '
           elif o2:
-            section_name = o2.group(4)
-            section_number =  o2.group(2) + ' ' + o2.group(3) + ': '
+            section_name = o2.group(3)
+            section_number = o2.group(2) + ' '
           elif o3:
-            section_name = o3.group(1)
+            section_name = o3.group(4)
+            if o3.group(2) == "":
+              section_number =  o3.group(3) + ' '
+            else:
+              section_number =  o3.group(2) + ' ' + o3.group(3) + ' '
+          elif o4:
+            section_name = o4.group(1)
             section_number = ''
           else:
             print 'Unknown heading format "%s"' % sections[i]
