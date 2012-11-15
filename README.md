@@ -9,12 +9,15 @@ Documented Improvements
 Improved possibilities of customizations of the env macros:
 
 Add a custom prefix to \labels:
+
     help Tex_EnvLabelprefix_name
 
 Add a <CR> after environments:
+
     help Tex_EnvEndWithCR
 
 Add the \label after the content:
+
     help Tex_LabelAfterContent
 
 Undocumented Improvements
