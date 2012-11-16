@@ -257,6 +257,7 @@ endfunction " }}}
 " Tex_SetupFileCompletion:  {{{
 " Description: 
 function! Tex_SetupFileCompletion(accept, reject, ext, dir, root)
+	call Tex_Debug(":Tex_SetupFileCompletion: " . a:accept . ", " . a:reject . ", " . a:ext . ", " . a:dir . ", " . a:root, "view")
 	call FB_SetVar('FB_AllowRegexp', a:accept)
 	call FB_SetVar('FB_RejectRegexp', a:reject)
 	call FB_SetVar('FB_CallBackFunction', 'Tex_CompleteFileName')
