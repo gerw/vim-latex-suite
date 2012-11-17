@@ -347,15 +347,18 @@ endfunction
 " TexFoldTextFunction: create fold text for folds {{{
 function! TexFoldTextFunction()
 	let leadingSpace = matchstr('                                       ', ' \{,'.indent(v:foldstart).'}')
+
 	" The number of lines is already aligned to width '3'. We align it to width '5'
 	let myfoldtext = foldtext()
 	let leadingzeros = 5-max([strlen(matchstr(myfoldtext, '\d\+')),3])
 	if leadingzeros > 0
 		let myfoldtext = substitute(myfoldtext, '\ze\d\+', matchstr('     ', ' \{,'.leadingzeros.'}'), '')
 	endif
+
 	if getline(v:foldstart) =~ '^\s*\\begin{'
 		let header = matchstr(getline(v:foldstart),
 							\ '^\s*\\begin{\zs\([:alpha:]*\)[^}]*\ze}')
+		let title = ''
 		let caption = ''
 		let label = ''
 		let i = v:foldstart
@@ -376,10 +379,36 @@ function! TexFoldTextFunction()
 				" :FIXME: this does not work when \label contains a
 				" newline or a }-character
 				let label = substitute(label, '\([^}]*\)}.*$', '\1', '')
+			elseif header =~ 'frame' && getline(i) =~ '\\begin{frame}.*{[^{}]*}\|\\frametitle\|%'
+				if getline(i) =~ '\\begin{frame}'
+					" The first argument inside {} is the frame title (the
+					" second one is a subtitle)
+					let title = matchstr(getline(i), '\\begin{frame}.\{-}{\zs[^{}]*\ze}')
+				elseif getline(i) =~ '\\frametitle'
+					let title = matchstr(getline(i), '\\frametitle{\zs[^}]*\ze}')
+				elseif getline(i) =~ '%' && title == ''
+					let title = substitute(getline(i), '^\(\s\|%\)*', '', '')
+				endif
 			end
 
 			let i = i + 1
 		endwhile
+
+		if header =~ 'frame'
+			if title == ''
+				let title = getline(v:foldstart + 1)
+			end
+			" Count frames
+			let frnum = 0
+			for line in getline(1,v:foldstart)
+				if line =~ '\\begin{frame}'
+					let frnum=frnum+1
+				endif
+			endfor
+			" Pad with spaces to length 2
+			let frnum = repeat(' ', 2-len(frnum)) . frnum
+			return substitute(myfoldtext, ':.*', ': Frame ' . frnum . ': ' . title ,'')
+		end
 
 		let ftxto = myfoldtext
 		" if no caption found, then use the second line.
