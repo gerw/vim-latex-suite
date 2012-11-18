@@ -166,6 +166,9 @@ function! MakeSyntaxFolds(force, ...)
 		let i = i + 1
 	endwhile
 
+	" Close all folds.
+	normal zM
+
 	exe maxline
 	
 	if a:0 == 0
@@ -237,10 +240,14 @@ function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2
 		endwhile
 		if lineEnd > a:line2
 			exe (lineBegin + a:startoff).','.a:line2.' fold'
+			" Open all folds:
+			normal zR
 			break
 		else
 			" call PrintError ('for ['.a:startpat.'] '.(lineBegin + a:startoff).','.(lineEnd + a:endoff).' fold')
 			exe (lineBegin + a:startoff).','.(lineEnd + a:endoff).' fold'
+			" Open all folds:
+			normal zR
 		end
 
 		" call PrintError('line1 = '.a:line1.', searching from '.line('.').'... for ['.a:startpat.'')

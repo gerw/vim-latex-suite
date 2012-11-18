@@ -65,7 +65,6 @@ function! Tex_FoldSections(lst, endpat)
 	if i > 0
 		call Tex_FoldSections(strpart(a:lst,i+1), endpat)
 	endif
-	let endpat = '^\s*\\appendix\W\|^\\begin{document}\|' . endpat
 	call AddSyntaxFoldItem(s, endpat, 0, -1)
 endfunction
 " }}}
@@ -289,7 +288,7 @@ function! MakeTexFolds(force)
 					" In other words, the pattern is safe, but not exact.
 					call AddSyntaxFoldItem('^\s*\\'.s.'{[^{}]*$','^[^}]*}',0,0)
 				else
-					call AddSyntaxFoldItem('^\s*\\begin{'.s,'\(^\|\s\)\s*\\end{'.s,0,0)
+					call AddSyntaxFoldItem('^\s*\\begin{'.s,'\(^\|\s\)\s*\\end{'.s,0,0,'^\s*\\begin{'.s,'\(^\|\s\)\s*\\end{'.s)
 				endif
 			endif
 		endwhile
@@ -300,10 +299,10 @@ function! MakeTexFolds(force)
 	" Sections {{{
 	if g:Tex_FoldedSections != '' 
 		call Tex_FoldSections(g:Tex_FoldedSections,
-			\ '^\s*\\frontmatter\|^\s*\\mainmatter\|^\s*\\backmatter\|'
+			\ '^\s*\\\%(frontmatter\|mainmatter\|backmatter\)\|'
 			\. '^\s*\\begin{thebibliography\|>>>\|^\s*\\endinput\|'
-			\. '^\s*\\begin{slide\|^\s*\\end{document\|'
-			\. '^\n*\s*\\\(\(begin\|end\){appendix}\|\\appendix\)')
+			\. '^\s*\\begin{slide\|^\s*\\\%(begin\|end\){document\|'
+			\. '^\s*\\\%(\%(begin\|end\){appendix}\|appendix\)')
 	endif
 	" }}} 
 	
