@@ -218,7 +218,9 @@ endfunction
 " }}}
 " FoldRegionsWithNoSkip: folding things such as \sections which do not nest. {{{
 function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2, skippedRegions)
+	" Move cursor to (begin of) line1
 	exe a:line1
+	normal 0
 
 	call s:Debug('line1 = '.a:line1.', searching from '.line('.').'... for ['.a:startpat.']')
 	let lineBegin = s:MySearch(a:startpat, 'in')
@@ -255,7 +257,9 @@ function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2
 		call s:Debug('... and finding it at '.lineBegin)
 	endwhile
 
+	" Move cursor to (end of) line2
 	exe a:line2
+	normal $
 	return
 endfunction
 
