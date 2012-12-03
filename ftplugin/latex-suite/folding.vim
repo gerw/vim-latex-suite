@@ -358,7 +358,7 @@ function! TexFoldTextFunction()
 				\. lines . ' lines: '
 
 	" Add some indent per foldlevel
-	let myfoldtext .= repeat('  ', v:foldlevel-1)
+	let myfoldtext .= repeat('> ', v:foldlevel-1)
 
 	if getline(v:foldstart) =~ '^\s*\\begin{'
 		let header = matchstr(getline(v:foldstart),
@@ -422,13 +422,13 @@ function! TexFoldTextFunction()
 
 		return myfoldtext . header.  ' ('.label.'): '.caption
 
-	elseif getline(v:foldstart) =~ '^%\+[ =-]*$'
+	elseif getline(v:foldstart) =~ '^\s*%\+[ =-]*$'
 		" Useless comment. Use the next line.
 		return myfoldtext . getline(v:foldstart+1)
-	elseif getline(v:foldstart) =~ '^%%fake'
+	elseif getline(v:foldstart) =~ '^\s*%%fake'
 		" Just strip one '%' from the fakesection.
-		return myfoldtext . substitute(getline(v:foldstart), '%%', '%', '')
-	elseif getline(v:foldstart) =~ '^%'
+		return myfoldtext . substitute(getline(v:foldstart), '^\s*%%fake', '%', '')
+	elseif getline(v:foldstart) =~ '^\s*%'
 		" It's any other comment. Use it.
 		return myfoldtext . getline(v:foldstart)
 	elseif getline(v:foldstart) =~ '^\s*\\document\(class\|style\).*{'
