@@ -1,16 +1,16 @@
 " ==============================================================================
 "        File: syntaxFolds.vim
-"      Author: Srinath Avadhanula
+"     Authors: Srinath Avadhanula, Gerd Wachsmuth
 "              ( srinath@fastmail.fm )
-" Last Change: Sun Oct 27 01:00 AM 2002 PST
 " Description: Emulation of the syntax folding capability of vim using manual
 "              folding
 "
 " This script provides an emulation of the syntax folding of vim using manual
 " folding. Just as in syntax folding, the folds are defined by regions. Each
-" region is specified by a call to FoldRegions() which accepts 4 parameters:
+" region is specified by a call to AddSyntaxFoldItem() which accepts 4 parameters.
+" The folds are actually created when calling MakeSyntaxFolds().
 "
-"    call FoldRegions(startpat, endpat, startoff, endoff)
+"    call AddSyntaxFoldItem(startpat, endpat, startoff, endoff)
 "
 "    startpat: a line matching this pattern defines the beginning of a fold.
 "    endpat  : a line matching this pattern defines the end of a fold.
@@ -81,11 +81,9 @@
 "     Note the use of startskip and endskip to allow nesting.
 "
 "
-" Each time a call is made to FoldRegions(), all the regions (which might be
-" disjoint, but not nested) are folded up.
-" Nested folds can be created by successive calls to FoldRegions(). The first
-" call defines the region which is deepest in the folding. See MakeTexFolds()
-" for an idea of how this works for latex files.
+" Each time a call is made to FoldRegionWith[No]Skip(), all the regions are folded up.
+" Nested folds can be created by successive calls to AddSyntaxFoldItem(). See
+" MakeTexFolds() for an idea of how this works for latex files.
 
 " Function: AddSyntaxFoldItem (start, end, startoff, endoff [, skipStart, skipEnd]) {{{
 function! AddSyntaxFoldItem(start, end, startoff, endoff, ...)
@@ -112,7 +110,7 @@ endfunction
 
 " }}}
 " Function: MakeSyntaxFolds (force) {{{
-" Description: This function calls FoldRegions() several times with the
+" Description: This function calls FoldRegionsWith[No]Skip() several times with the
 "     parameters specifying various regions resulting in a nested fold
 "     structure for the file.
 function! MakeSyntaxFolds(force, ...)
@@ -160,7 +158,7 @@ function! MakeSyntaxFolds(force, ...)
 			call FoldRegionsWithSkip(startPat, endPat, startOff, endOff, skipStart, skipEnd, 1, line('$'))
 			call s:Debug('done folding ['.startPat.']')
 		else
-			call FoldRegionsWithNoSkip(startPat, endPat, startOff, endOff, 1, line('$'), '')
+			call FoldRegionsWithNoSkip(startPat, endPat, startOff, endOff, 1, line('$'), [])
 		end
 
 		let i = i + 1
@@ -179,7 +177,10 @@ function! MakeSyntaxFolds(force, ...)
 		end
 		let b:doneFolding = 0
 	end
-	call s:Debug('Finished folding in ' . reltimestr(reltime(start)) . ' seconds.')
+	" Always report a folding performance.
+	if exists('*Tex_Debug')
+		call Tex_Debug('Finished folding in ' . reltimestr(reltime(start)) . ' seconds.', 'SyntaxFolds')
+	end
 endfunction
 
 
@@ -313,10 +314,9 @@ function! IsInSkippedRegion(lnum, regions)
 	endfor
 	return 0
 endfunction " }}}
-
-" Debug: A wrapper for Tex_Debug, if it exists {{{
+" Debug: A wrapper for Tex_Debug, if it exists and if g:SyntaxFolds_Debug == 1 {{{
 function! <SID>Debug(string)
-	if exists('*Tex_Debug')
+	if exists('g:SyntaxFolds_Debug') && g:SyntaxFolds_Debug == 1 && exists('*Tex_Debug')
 		call Tex_Debug(a:string,'SyntaxFolds')
 	end
 endfunction
