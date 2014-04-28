@@ -211,7 +211,9 @@ function! FoldRegionsWithSkip(startpat, endpat, startoff, endoff, startskip, end
 				let skippedRegions = skippedRegions[:-2]
 
 				" The found region should be skipped on higher levels:
-				let skippedRegions[-1] = skippedRegions[-1] + [[lastBegin, line('.')]]
+				if len(skippedRegions) > 0
+					let skippedRegions[-1] = skippedRegions[-1] + [[lastBegin, line('.')]]
+				end
 			else
 				call s:Debug('Found [' . a:endskip . '] on line ' . line('.') . ', but nothing is in BeginSkipArray. Something is wrong here.')
 			end
