@@ -418,7 +418,7 @@ function! Tex_GetMainFileName(...)
 		return retval
 	endif
 
-	let s:origdir = fnameescape(getcwd())
+	let l:origdir = fnameescape(getcwd())
 
 	let dirmodifier = '%:p:h'
 	let dirLast = fnameescape(expand(dirmodifier))
@@ -449,7 +449,7 @@ function! Tex_GetMainFileName(...)
 		let lheadfile = expand('%'.modifier)
 	endif
 
-	exe 'cd '.s:origdir
+	exe 'cd '.l:origdir
 
 	" NOTE: The caller of this function needs to escape the file name with
 	"       fnameescape() . The reason its not done here is that escaping is not
