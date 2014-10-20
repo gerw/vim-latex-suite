@@ -440,7 +440,7 @@ function! Tex_PartCompile() range
 	" Get a temporary file in the same directory as the file from which
 	" fragment is being extracted. This is to enable the use of relative path
 	" names in the fragment.
-	let tmpfile = Tex_GetTempName(expand('%:p:h'))
+	let tmpfile = Tex_GetTempName(expand('%:p:h').'/')
 
 	" Remember all the temp files and for each temp file created, remember
 	" where the temp file came from.
