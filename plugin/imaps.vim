@@ -172,7 +172,7 @@ function! IMAP(lhs, rhs, ft, ...)
 	let s:phe_{a:ft}_{hash} = phe
 
 	" Add a:lhs to the list of left-hand sides that end with lastLHSChar:
-	let lastLHSChar = a:lhs[strlen(a:lhs)-1]
+	let lastLHSChar = s:MultiByteStrpart(a:lhs,s:MultiByteStrlen(a:lhs)-1)
 	let hash = s:Hash(lastLHSChar)
 	if !exists("s:LHS_" . a:ft . "_" . hash)
 		let s:LHS_{a:ft}_{hash} = escape(a:lhs, '\')
@@ -196,7 +196,7 @@ endfunction
 "
 " Added mainly for debugging purposes, but maybe worth keeping.
 function! IMAP_list(lhs)
-	let char = a:lhs[strlen(a:lhs)-1]
+	let char = s:MultiByteStrpart(a:lhs,s:MultiByteStrlen(a:lhs)-1)
 	let charHash = s:Hash(char)
 	if exists("s:LHS_" . &ft ."_". charHash) && a:lhs =~ s:LHS_{&ft}_{charHash}
 		let ft = &ft
@@ -251,11 +251,11 @@ function! s:LookupCharacter(char)
 				call IMAP_Debug('getting abbreviationRHS = ['.abbreviationRHS.']', 'imap')
 
 				if @a =~ "No abbreviation found" || abbreviationRHS == ""
-					let @a = _a
+					call setreg("a", _a, "c")
 					return a:char
 				endif
 
-				let @a = _a
+				call setreg("a", _a, "c")
 				let abbreviationRHS = escape(abbreviationRHS, '\<"')
 				exec 'let abbreviationRHS = "'.abbreviationRHS.'"'
 
@@ -286,7 +286,7 @@ function! s:LookupCharacter(char)
 	endif
 	" enough back-spaces to erase the left-hand side; -1 for the last
 	" character typed:
-	let bs = substitute(strpart(lhs, 1), ".", "\<bs>", "g")
+	let bs = substitute(s:MultiByteStrpart(lhs, 1), ".", "\<bs>", "g")
 	" \<c-g>u inserts an undo point
 	return a:char . "\<c-g>u\<bs>" . bs . IMAP_PutTextWithMovement(rhs, phs, phe)
 endfunction
@@ -474,20 +474,20 @@ endfunction
 " etc.
 
 " jumping forward and back in insert mode.
-imap <silent> <Plug>IMAP_JumpForward    <c-r>=IMAP_Jumpfunc('',0)<CR>
-imap <silent> <Plug>IMAP_JumpBack       <c-r>=IMAP_Jumpfunc('b',0)<CR>
+inoremap <silent> <Plug>IMAP_JumpForward    <c-r>=IMAP_Jumpfunc('', 0)<CR>
+inoremap <silent> <Plug>IMAP_JumpBack       <c-r>=IMAP_Jumpfunc('b', 0)<CR>
 
 " jumping in normal mode
-nmap <silent> <Plug>IMAP_JumpForward        i<c-r>=IMAP_Jumpfunc('',0)<CR>
-nmap <silent> <Plug>IMAP_JumpBack           i<c-r>=IMAP_Jumpfunc('b',0)<CR>
+nnoremap <silent> <Plug>IMAP_JumpForward        i<c-r>=IMAP_Jumpfunc('', 0)<CR>
+nnoremap <silent> <Plug>IMAP_JumpBack           i<c-r>=IMAP_Jumpfunc('b', 0)<CR>
 
 " deleting the present selection and then jumping forward.
-vmap <silent> <Plug>IMAP_DeleteAndJumpForward       "_<Del>i<c-r>=IMAP_Jumpfunc('',0)<CR>
-vmap <silent> <Plug>IMAP_DeleteAndJumpBack          "_<Del>i<c-r>=IMAP_Jumpfunc('b',0)<CR>
+vnoremap <silent> <Plug>IMAP_DeleteAndJumpForward       "_<Del>i<c-r>=IMAP_Jumpfunc('', 0)<CR>
+vnoremap <silent> <Plug>IMAP_DeleteAndJumpBack          "_<Del>i<c-r>=IMAP_Jumpfunc('b', 0)<CR>
 
 " jumping forward without deleting present selection.
-vmap <silent> <Plug>IMAP_JumpForward       <C-\><C-N>i<c-r>=IMAP_Jumpfunc('',0)<CR>
-vmap <silent> <Plug>IMAP_JumpBack          <C-\><C-N>`<i<c-r>=IMAP_Jumpfunc('b',0)<CR>
+vnoremap <silent> <Plug>IMAP_JumpForward       <C-\><C-N>i<c-r>=IMAP_Jumpfunc('', 0)<CR>
+vnoremap <silent> <Plug>IMAP_JumpBack          <C-\><C-N>`<i<c-r>=IMAP_Jumpfunc('b', 0)<CR>
 
 " }}}
 " Default maps for IMAP_Jumpfunc {{{
@@ -512,7 +512,7 @@ else
 endif
 " }}}
 
-nmap <silent> <script> <plug><+SelectRegion+> `<v`>
+nnoremap <silent> <script> <plug><+SelectRegion+> `<v`>
 
 " ============================================================================== 
 " enclosing selected region.
@@ -573,7 +573,7 @@ function! VEnclose(vstart, vend, VStart, VEnd)
 
 		silent! exe normcmd
 		" this is to restore the r register.
-		let @r = _r
+		call setreg("r", _r, "c")
 		" and finally, this is to restore the search history.
 		execute s:RemoveLastHistoryItem
 
@@ -615,7 +615,7 @@ function! ExecMap(prefix, mode)
 		let char = getchar()
 		if char !~ '^\d\+$'
 			if char == "\<BS>"
-				let mapCmd = strpart(mapCmd, 0, strlen(mapCmd) - 1)
+				let mapCmd = s:MultiByteStrpart(mapCmd, 0, s:MultiByteStrlen(mapCmd) - 1)
 			endif
 		else " It is the ascii code.
 			let char = nr2char(char)
@@ -627,7 +627,7 @@ function! ExecMap(prefix, mode)
 					let foundMap = 1
 					let breakLoop = 1
 				elseif mapcheck(mapCmd, a:mode) == ""
-					let mapCmd = strpart(mapCmd, 0, strlen(mapCmd) - 1)
+					let mapCmd = s:MultiByteStrpart(mapCmd, 0, s:MultiByteStrlen(mapCmd) - 1)
 				endif
 			endif
 		endif
@@ -802,6 +802,30 @@ function! IMAP_GetVal(name, ...)
 		return default
 	endif
 endfunction " }}}
+" s:MultiByteStrlen: Same as strlen() but counts multibyte characters {{{
+" instead of bytes.
+function s:MultiByteStrlen(str)
+	return strlen(substitute(a:str, ".", "x", "g"))
+endfunction " }}}
+" s:MultiByteStrpart: Same as strpart() but counts multibyte characters {{{
+" instead of bytes.
+function s:MultiByteStrpart(src,start,...)
+	let lensrc=s:MultiByteStrlen(a:src)
+	let start=a:start
+	let len=lensrc-a:start
+	if a:0 != 0
+		let len=a:1
+	endif
+	if start < 0
+		let len=max([0,len+start])
+		let start=0
+	endif
+	let len=min([len,lensrc-start])
+	let end=lensrc - len - start
+	let src=substitute(a:src,"^.\\{".start."\\}","","")
+	return substitute(src,".\\{".end."\\}$","","")
+endfunction
+" }}}
 
 " ============================================================================== 
 " A bonus function: Snip()

@@ -546,7 +546,7 @@ function! Tex_GetErrorList()
 	let _a = @a
 	redir @a | silent! clist | redir END
 	let errlist = @a
-	let @a = _a
+	call setreg("a", _a, "c")
 
 	if errlist =~ 'E42: '
 		let errlist = ''
@@ -981,7 +981,7 @@ else
 		let _a = @a
 		silent! normal! ggVG"ay
 		let retval = @a
-		let @a = _a
+		call setreg("a", _a, "c")
 
 		silent! bd
 		let &report = _report

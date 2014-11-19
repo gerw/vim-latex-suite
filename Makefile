@@ -1,11 +1,12 @@
 PREFIX=/usr/local
 VIMDIR=$(PREFIX)/share/vim
 BINDIR=$(PREFIX)/bin
+APPDATADIR=$(PREFIX)/share/appdata
 
 VERSION=1.8.23
 DATE=$(shell date +%Y%m%d)
 COMMIT_COUNT=$(shell git log --oneline | wc -l)
-ABBREV_HASH=$(shell git log --oneline | head -n 1 | cut -d\  -f 1)
+ABBREV_HASH=$(shell git rev-parse --short=7 HEAD)
 
 SNAPSHOTNAME=vim-latex-$(VERSION)-$(DATE).$(COMMIT_COUNT)-git$(ABBREV_HASH)
 
@@ -22,6 +23,9 @@ install:
 
 	install -d '$(DESTDIR)$(BINDIR)'
 	install latextags ltags '$(DESTDIR)$(BINDIR)'
+
+	install -d '$(DESTDIR)$(APPDATADIR)'
+	install vim-latex.metainfo.xml '$(DESTDIR)$(APPDATADIR)'
 
 upload: snapshot
 	scp '$(SNAPSHOTNAME).tar.gz' frs.sourceforge.net:/home/frs/project/v/vi/vim-latex/snapshots

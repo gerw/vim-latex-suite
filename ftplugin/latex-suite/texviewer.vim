@@ -116,7 +116,7 @@ function! Tex_Complete(what, where)
 
 			redraw!
 
-		elseif exists("s:type") && s:type =~ 'cite'
+		elseif exists("s:type") && s:type =~ '[Cc]ite'
 
 			let s:prefix = matchstr(s:prefix, '\([^,]\+,\)*\zs\([^,]\+\)\ze$')
 			call Tex_Debug(":Tex_Complete: using s:prefix = ".s:prefix, "view")
@@ -567,17 +567,17 @@ function! Tex_ScanFileForCite(prefix)
 	let presBufNum = bufnr('%')
 
 	let foundCiteFile = 0
-	" First find out if this file has a \bibliography command in it. If so,
-	" assume that this is the only file in the project which defines a
-	" bibliography.
-	if search('\\\(no\)\?\(bibliography\|addbibresource\){', 'w')
+	" First find out if this file has a \(no)bibliography or a \addbibresource
+	" (biblatex) command in it. If so, assume that this is the only file
+	" in the project which defines a bibliography.
+	if search('\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){', 'w')
 		call Tex_Debug('Tex_ScanFileForCite: found bibliography command in '.bufname('%'), 'view')
 		" convey that we have found a bibliography command. we do not need to
 		" proceed any further.
 		let foundCiteFile = 1
 
 		" extract the bibliography filenames from the command.
-		let bibnames = matchstr(getline('.'), '\\\(no\)\?\(bibliography\|addbibresource\){\zs.\{-}\ze}')
+		let bibnames = matchstr(getline('.'), '\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){\zs.\{-}\ze}')
 		let bibnames = substitute(bibnames, '\s', '', 'g')
 
 		call Tex_Debug('trying to search through ['.bibnames.']', 'view')
@@ -593,9 +593,8 @@ function! Tex_ScanFileForCite(prefix)
 
 			" first try to find if a .bib file exists. If so do not search in
 			" the corresponding .bbl file. (because the .bbl file will most
-			" probly be generated automatically from the .bib file with
+			" probably be generated automatically from the .bib file with
 			" bibtex).
-			
 			let fname = Tex_FindFile(bibname, '.,'.g:Tex_BIBINPUTS, '.bib')
 			if fname != ''
 				call Tex_Debug('finding .bib file ['.bufname('%').']', 'view')
@@ -609,6 +608,14 @@ function! Tex_ScanFileForCite(prefix)
 					call Tex_Debug('finding .bbl file ['.bufname('.').']', 'view')
 					call Tex_Grepadd('\\bibitem{'.a:prefix, "%")
 					q
+				else
+					" Assume that file is a full path - can also be a remote
+					" file or url, such as http://..., which is useful for
+					" use with zotero.
+					exec 'split "'.Tex_EscapeSpaces(bibname).'"'
+					call Tex_Debug('opening bibliography file', 'view')
+					call Tex_Grepadd('@.*{'.a:prefix, "%")
+					q
 				endif
 			endif
 
@@ -621,11 +628,11 @@ function! Tex_ScanFileForCite(prefix)
 	endif
 
 	" If we have a thebibliography environment, then again assume that this is
-	" the only file which defines the bib-keys. Aand convey this information
+	" the only file which defines the bib-keys. And convey this information
 	" upwards by returning 1.
 	if search('^\s*\\begin{thebibliography}', 'w')
 		call Tex_Debug('got a thebibliography environment in '.bufname('%'), 'view')
-		
+
 		let foundCiteFile = 1
 
 		split
@@ -861,12 +868,12 @@ function! Tex_FindBibFiles()
 	split
 	exec 'silent! e '.fnameescape(mainfname)
 
-	if search('\\\(no\)\?\(bibliography\|addbibresource\){', 'w')
+	if search('\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){', 'w')
 
 		call Tex_Debug('Tex_FindBibFiles: found bibliography command in '.bufname('%'), 'view')
 
 		" extract the bibliography filenames from the command.
-		let bibnames = matchstr(getline('.'), '\\\(no\)\?\(bibliography\|addbibresource\){\zs.\{-}\ze}')
+		let bibnames = matchstr(getline('.'), '\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){\zs.\{-}\ze}')
 		let bibnames = substitute(bibnames, '\s', '', 'g')
 
 		call Tex_Debug(':Tex_FindBibFiles: trying to search through ['.bibnames.']', 'view')
