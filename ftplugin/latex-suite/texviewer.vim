@@ -252,7 +252,7 @@ function! Tex_CompleteWord(completeword, prefixlength)
 endfunction " }}}
 
 " ==============================================================================
-" File name completion helper functons
+" File name completion helper functions
 " ============================================================================== 
 " Tex_SetupFileCompletion:  {{{
 " Description: 
