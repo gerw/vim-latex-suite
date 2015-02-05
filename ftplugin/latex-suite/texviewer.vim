@@ -59,6 +59,7 @@ function! Tex_Complete(what, where)
 		let s:curline = strpart(getline('.'), 0, col('.'))
 		let s:prefix = matchstr(s:curline, '.*{\zs.\{-}\(}\|$\)')
 		let s:refprefix = ''
+
 		" a command is of the type
 		" \psfig[option=value]{figure=}
 		" Thus
@@ -67,26 +68,37 @@ function! Tex_Complete(what, where)
 		" from which we need to extract
 		" 	s:type = 'psfig'
 		" 	s:typeoption = '[option=value]'
-		let pattern = '.*\\\(\w\{-}\)\(\[.\{-}\]\)*{\([^ [\]\t}]\+\)\?$'
-		if s:curline =~ pattern
-			let s:type = substitute(s:curline, pattern, '\1', 'e')
-			let s:typeoption = substitute(s:curline, pattern, '\2', 'e')
+		let commandpattern = '.*\\\(\w\{-}\)\(\[.\{-}\]\)*{\([^ [\]\t}]\+\)\?$'
+
+		" An equation reference is detected by the following pattern.
+		" It matches a opening parenthesis, followed by
+		" a mix of letters, numbers and dots.
+		" It does not match something like "(theorem.1",
+		" since this should be expanded to something like
+		" "(\ref{thm1}".
+		let eqpattern = '^.\{-}\((\%(theorem\|lemma\|definition\|remark\|proposition\|corollary\|assumption\|figure\|table\|algorithm\|part\|chapter\|section\|subsection\|subsubsection\|paragraph\|subparagraph\)\@!\(\w\|\.\)*)\?\)$'
+
+		" The next pattern matches a reference to a theorem (et al)
+		" It matches a mix of letters, numbers and dots,
+		" starting with letter or dot and containing at least one dot.
+		let otherpattern = '^.\{-}\(\w\+\.\%(\w\|\.\)*\)$'
+
+		if s:curline =~ eqpattern
+			" User want to complete an equation reference
+			let s:type = 'eqref'
+			let s:prefix = substitute(s:curline, eqpattern, '\1', '')
+			let s:refprefix = '\eqref{'
+		elseif s:curline =~ otherpattern
+			" User want to complete theorem/remark/... reference
+			let s:type = 'autoref'
+			let s:prefix = substitute(s:curline, otherpattern, '\1', '')
+			let s:refprefix = '\autoref{'
+		elseif s:curline =~ commandpattern
+			let s:type = substitute(s:curline, commandpattern, '\1', 'e')
+			let s:typeoption = substitute(s:curline, commandpattern, '\2', 'e')
 			call Tex_Debug('Tex_Complete: s:type = '.s:type.', typeoption = '.s:typeoption, 'view')
 		else
-			let eqpattern = '^.\{-}\((\%(theorem\|lemma\|definition\|remark\|proposition\|corollary\|assumption\|figure\|table\|algorithm\|part\|chapter\|section\|subsection\|subsubsection\|paragraph\|subparagraph\)\@!\(\w\|\.\)*)\?\)$'
-			let otherpattern = '^.\{-}\(\w*\.\(\w\|\.\)*\)$'
-			if s:curline =~ eqpattern
-				" User want to complete an equation reference
-				let s:type = 'eqref'
-				let s:prefix = substitute(s:curline, eqpattern, '\1', '')
-				let s:refprefix = '\eqref{'
-			elseif s:curline =~ otherpattern
-				" User want to complete theorem/remark/... reference
-				let s:type = 'autoref'
-				let s:prefix = substitute(s:curline, otherpattern, '\1', '')
-				let s:refprefix = '\autoref{'
-			else
-			endif
+			" Do nothing here.
 		endif
 
 		if exists("s:type") && s:type =~ 'ref'
