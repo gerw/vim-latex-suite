@@ -581,9 +581,16 @@ function! Tex_CompileMultipleTimes()
 			let needToRerun = 1
 		endif
 
+		" Determine if the bibliography should be compiled via bibtex or biber
+		if Tex_GetVarValue('Tex_BibtexFlavor') == "biber"
+			let temp_bibfile = '.bcf'
+		else
+			let temp_bibfile = '.aux'
+		endif
+
 		" The first time we see if we need to run bibtex and if the .bbl file
 		" changes, we will rerun latex.
-		if runCount == 0 && Tex_IsPresentInFile('\\bibdata', mainFileName_root.'.aux')
+		if runCount == 0 && Tex_IsPresentInFile('bibdata', mainFileName_root.temp_bibfile)
 			let bibFileName = mainFileName_root.'.bbl'
 
 			let biblinesBefore = Tex_CatFile(bibFileName)
