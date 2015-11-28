@@ -664,7 +664,7 @@ if g:Tex_PromptedEnvironments != ''
 			" the file, then a part of the file is the preamble.
 
 			" search for where the document begins.
-			let begin_line = search('\\begin{document}')
+			let begin_line = search('\\begin{document}', 'c')
 			" if the document begins after where we are presently, then we are
 			" in the preamble.
 			if start_line < begin_line
@@ -678,7 +678,7 @@ if g:Tex_PromptedEnvironments != ''
 				return Tex_DoEnvironment()
 			endif
 
-		elseif search('\\documentclass')
+		elseif search('\\documentclass', 'bW')
 			" if there is only a \documentclass but no \begin{document}, then
 			" the entire file is a preamble. Put a package.
 
