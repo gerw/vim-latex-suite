@@ -45,7 +45,7 @@ function! <SID>ReadTemplate(...)
 					\ filelist, ',')
 	endif
 
-	let fname = Tex_FindInTemplateDir('', ':p')
+	let fname = Tex_FindInTemplateDir(filename.'.tex', ':p')
 	call Tex_Debug("0read ".fname, 'templates')
 
 	silent! exe "0read ".fname
