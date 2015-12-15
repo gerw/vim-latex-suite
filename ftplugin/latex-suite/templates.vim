@@ -14,6 +14,10 @@ let s:path = fnameescape(expand("<sfile>:p:h"))
 
 " SetTemplateMenu: sets up the menu for templates {{{
 function! <SID>SetTemplateMenu()
+	if exists("g:Tex_CustomTemplateFolder")
+		let flist = Tex_FindInCustomDir('')
+	else
+		let flist = Tex_FindInRtp('', 'templates')
 	let flist = Tex_FindInRtp('', 'templates')
 	let i = 1
 	while 1
@@ -37,7 +41,11 @@ function! <SID>ReadTemplate(...)
 	if a:0 > 0
 		let filename = a:1
 	else
-		let filelist = Tex_FindInRtp('', 'templates')
+		if exists("g:Tex_CustomTemplateFolder")
+			let filelist = Tex_FindInCustomDir('')
+		else
+			let filelist = Tex_FindInRtp('', 'templates')
+		endif
 		let filename = 
 					\ Tex_ChooseFromPrompt("Choose a template file:\n" . 
 					\ Tex_CreatePrompt(filelist, 2, ',') . 
@@ -45,7 +53,11 @@ function! <SID>ReadTemplate(...)
 					\ filelist, ',')
 	endif
 
-	let fname = Tex_FindInRtp(filename.'.tex', 'templates', ':p')
+	if exists("g:Tex_CustomTemplateFolder")
+		let fname = Tex_FindInCustomDir(filename.'.tex', ':p')
+	else
+		let fname = Tex_FindInRtp(filename.'.tex', 'templates', ':p')
+	endif
 	call Tex_Debug("0read ".fname, 'templates')
 
 	silent! exe "0read ".fname
