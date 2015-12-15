@@ -37,7 +37,7 @@ function! <SID>ReadTemplate(...)
 	if a:0 > 0
 		let filename = a:1
 	else
-		let flist = Tex_FindInTemplateDir('')
+		let filelist = Tex_FindInTemplateDir('')
 		let filename = 
 					\ Tex_ChooseFromPrompt("Choose a template file:\n" . 
 					\ Tex_CreatePrompt(filelist, 2, ',') . 
@@ -45,7 +45,7 @@ function! <SID>ReadTemplate(...)
 					\ filelist, ',')
 	endif
 
-	let flist = Tex_FindInTemplateDir('')
+	let fname = Tex_FindInTemplateDir('')
 	call Tex_Debug("0read ".fname, 'templates')
 
 	silent! exe "0read ".fname
