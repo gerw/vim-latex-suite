@@ -538,6 +538,52 @@ function! Tex_FindInRtp(filename, directory, ...)
 	return substitute(retfilelist, ',$', '', '')
 endfunction
 
+function! Tex_FindInTemplateDir(filename, ...)
+	" how to expand each filename. ':p:t:r' modifies each filename to its
+	" trailing part without extension.
+	let expand = (a:0 > 0 ? a:1 : ':p:t:r')
+	echom a:filename
+	" The pattern used... An empty filename should be regarded as '*'
+	let pattern = (a:filename != '' ? a:filename : '*')
+	" get list of files from template folder
+	if exists("g:Tex_CustomTemplateFolder")
+		let filelist = globpath(g:Tex_CustomTemplateFolder, pattern)."\n"
+	else
+		let filelist = globpath(&rtp, 'ftplugin/latex-suite/templates/'.pattern)."\n"
+	endif
+
+	if filelist == "\n"
+		return ''
+	endif
+
+	if a:filename != ''
+		return fnamemodify(Tex_Strntok(filelist, "\n", 1), expand)
+	endif
+
+	" Now cycle through the files modifying each filename in the desired
+	" manner.
+	let retfilelist = ''
+	let i = 1
+	while 1
+		" Extract the portion till the next newline. Then shorten the filelist
+		" by removing till the newline.
+		let nextnewline = stridx(filelist, "\n")
+		if nextnewline == -1
+			break
+		endif
+		let filename = strpart(filelist, 0, nextnewline)
+		let filelist = strpart(filelist, nextnewline+1)
+
+		" The actual modification.
+		if fnamemodify(filename, expand) != ''
+			let retfilelist = retfilelist.fnamemodify(filename, expand).","
+		endif
+		let i = i + 1
+	endwhile
+
+	return substitute(retfilelist, ',$', '', '')
+endfunction
+
 " }}}
 " Tex_GetErrorList: returns vim's clist {{{
 " Description: returns the contents of the error list available via the :clist

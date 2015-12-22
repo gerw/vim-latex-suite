@@ -4607,6 +4607,35 @@ let g:Tex_ViewRuleComplete_html = 'start MozillaFirebird $*/index.html'</program
     </para>
    </section>
   </section>
+  <section id="customizing-directories">
+   <title>Template Directory Customization</title>
+   <para>
+    These setting describes the directory scanned by &ls; to search for
+    templates.
+   </para>
+   <section id="Tex_CustomTemplateFolder">
+    <title>g:Tex_CustomTemplateFolder</title>
+    <informaltable frame="all">
+     <tgroup cols="2">
+      <tbody>
+       <row><entry>Type</entry><entry>string</entry></row>
+       <row><entry>Default Value</entry>
+        <entry><literal>''</literal></entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <para>
+     Example:
+    </para>
+    <para>
+<<<<<<< HEAD
+     let g:Tex_CustomTemplateFolder=/home/user/templates
+=======
+     set g:Tex_CustomTemplateFolder=/home/user/templates
+>>>>>>> customTemplateDir
+    </para>
+   </section>
+  </section>
  </section>
  <section id="latex-suite-credits">
   <title>Credits</title>
