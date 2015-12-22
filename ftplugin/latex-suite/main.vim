@@ -538,14 +538,19 @@ function! Tex_FindInRtp(filename, directory, ...)
 	return substitute(retfilelist, ',$', '', '')
 endfunction
 
-function! Tex_FindInCustomDir(filename, ...)
+function! Tex_FindInTemplateDir(filename, ...)
 	" how to expand each filename. ':p:t:r' modifies each filename to its
 	" trailing part without extension.
 	let expand = (a:0 > 0 ? a:1 : ':p:t:r')
 	echom a:filename
 	" The pattern used... An empty filename should be regarded as '*'
 	let pattern = (a:filename != '' ? a:filename : '*')
-	let filelist = globpath(g:Tex_CustomTemplateFolder, pattern)."\n"
+	" get list of files from template folder
+	if exists("g:Tex_CustomTemplateFolder")
+		let filelist = globpath(g:Tex_CustomTemplateFolder, pattern)."\n"
+	else
+		let filelist = globpath(&rtp, 'ftplugin/latex-suite/templates/'.pattern)."\n"
+	endif
 
 	if filelist == "\n"
 		return ''

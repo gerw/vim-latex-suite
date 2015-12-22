@@ -4628,7 +4628,11 @@ let g:Tex_ViewRuleComplete_html = 'start MozillaFirebird $*/index.html'</program
      Example:
     </para>
     <para>
+<<<<<<< HEAD
      let g:Tex_CustomTemplateFolder=/home/user/templates
+=======
+     set g:Tex_CustomTemplateFolder=/home/user/templates
+>>>>>>> customTemplateDir
     </para>
    </section>
   </section>

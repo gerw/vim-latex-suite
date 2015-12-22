@@ -3479,7 +3479,11 @@ Default Value    ''
 
 Example:
 
+<<<<<<< HEAD
 let g:Tex_CustomTemplateFolder=/home/user/templates
+=======
+set g:Tex_CustomTemplateFolder=/home/user/templates
+>>>>>>> customTemplateDir
 
 ================================================================================
 Credits                                                        *ls_12* *ls_a_ec*
