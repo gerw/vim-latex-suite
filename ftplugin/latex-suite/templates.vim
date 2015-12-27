@@ -62,7 +62,9 @@ function! <SID>ReadTemplate(...)
 	0 d_
 
 	call s:ProcessTemplate()
-	call Tex_pack_updateall(1)
+	if exists('*Tex_pack_updateall')
+		call Tex_pack_updateall(1)
+	endif
 
 	" Do not handle the placeholders here. Let IMAP_PutTextWithMovement do it
 	" because it handles UTF-8 character substitutions etc. Therefore delete
@@ -70,17 +72,17 @@ function! <SID>ReadTemplate(...)
 	let _a = @a
 	normal! ggVG"ax
 	
-	let _fo = &fo
+	let _formatoptions = &formatoptions
 	" Since IMAP_PutTextWithMovement simulates the key-presses, leading
-	" indendatation can get duplicated in strange ways if ``fo`` is non-empty.
-	" NOTE: the indentexpr thingie is still respected with an empty fo so that
-	" 	    environments etc are properly indented.
-	set fo=
+	" indentation can get duplicated in strange ways if ``formatoptions`` is non-empty.
+	set formatoptions = paste
 
 	call Tex_Debug("normal! i\<C-r>=IMAP_PutTextWithMovement(@a, '".s:phsTemp."', '".s:pheTemp."')\<CR>", 'templates')
-	exec "normal! i\<C-r>=IMAP_PutTextWithMovement(@a, '".s:phsTemp."', '".s:pheTemp."')\<CR>"
+	silent exec "normal! i\<C-r>=IMAP_PutTextWithMovement(@a, '".s:phsTemp."', '".s:pheTemp."')\<CR>"
 
-	let &fo = _fo
+	let &formatoptions = _formatoptions
+
+	" Restore register a
 	call setreg("a", _a, "c")
 
 	call Tex_Debug('phs = '.s:phsTemp.', phe = '.s:pheTemp.', exe = '.s:exeTemp.', com = '.s:comTemp, 'templates')
@@ -182,7 +184,6 @@ endfunction
 " Command definitions {{{
 if v:version >= 602
 	com! -complete=custom,Tex_CompleteTemplateName -nargs=? TTemplate :call <SID>ReadTemplate(<f-args>)
-		\| :startinsert
 
 	" Tex_CompleteTemplateName: for completing names in TTemplate command {{{
 	"	Description: get list of template names with FindInTemplateDir(), remove full path
