@@ -27,10 +27,6 @@ function! <SID>SetTemplateMenu()
 	endwhile
 endfunction 
 
-if g:Tex_Menus
-	call <SID>SetTemplateMenu()
-endif
-
 " }}}
 " ReadTemplate: reads in the template file from the template directory. {{{
 function! <SID>ReadTemplate(...)
@@ -205,5 +201,11 @@ else
 endif
 
 " }}}
+" Set up the menus {{{
+if g:Tex_Menus
+	call <SID>SetTemplateMenu()
+endif
+
+"f}}}
 
 " vim:fdm=marker:ff=unix:noet:ts=4:sw=4
