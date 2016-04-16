@@ -787,7 +787,7 @@ if g:Tex_PromptedEnvironments != ''
 		let start_line = line('.')
 		let start_col = virtcol('.')
 
-		if a:env == '[' || a:env == '\['
+		if index(['[', '\[', '$$'], a:env) != -1
 			if b:DoubleDollars == 0
 				let first = '\['
 				let second = '\]'
