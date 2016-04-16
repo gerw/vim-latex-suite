@@ -90,9 +90,9 @@ function! Tex_Complete(what, where)
 			let s:refprefix = '\eqref{'
 		elseif s:curline =~ otherpattern
 			" User want to complete theorem/remark/... reference
-			let s:type = 'autoref'
+			let s:type = 'ref'
 			let s:prefix = substitute(s:curline, otherpattern, '\1', '')
-			let s:refprefix = '\autoref{'
+			let s:refprefix = '\' . Tex_GetVarValue('Tex_RefCompletionCommand', 'ref') . '{'
 		elseif s:curline =~ commandpattern
 			let s:type = substitute(s:curline, commandpattern, '\1', 'e')
 			let s:typeoption = substitute(s:curline, commandpattern, '\2', 'e')
