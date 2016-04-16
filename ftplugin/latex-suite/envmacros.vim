@@ -712,7 +712,7 @@ if g:Tex_PromptedEnvironments != ''
 			" If the g:Tex_PackagesMenu variable is set to zero,
 			" the function Tex_pack_one is not defined. In this case
 			" we use a very simple replacement.
-			if has('*Tex_pack_one')
+			if exists('*Tex_pack_one')
 				return Tex_pack_one(pack)
 			else
 				return IMAP_PutTextWithMovement('\usepackage{'.pack."}\<CR>", '<+', '+>')
