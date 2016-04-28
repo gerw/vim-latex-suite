@@ -7,10 +7,13 @@
 "
 " This script provides an emulation of the syntax folding of vim using manual
 " folding. Just as in syntax folding, the folds are defined by regions. Each
-" region is specified by a call to AddSyntaxFoldItem() which accepts 4 parameters.
+" region is specified by a call to AddSyntaxFoldItem() which accepts either 4
+" or 6 parameters. When it is called with 4 arguments, it is equivalent to
+" calling it with 6 arguments with the last two left blank (i.e as empty
+" strings).
 " The folds are actually created when calling MakeSyntaxFolds().
 "
-"    call AddSyntaxFoldItem(startpat, endpat, startoff, endoff)
+"    call AddSyntaxFoldItem(startpat, endpat, startoff, endoff [, skipStart, skipEnd])
 "
 "    startpat: a line matching this pattern defines the beginning of a fold.
 "    endpat  : a line matching this pattern defines the end of a fold.
@@ -106,8 +109,6 @@ function! AddSyntaxFoldItem(start, end, startoff, endoff, ...)
 	exe 'let b:skipStartPat_'.b:numFoldItems.' = skipStart'
 	exe 'let b:skipEndPat_'.b:numFoldItems.' = skipEnd'
 endfunction 
-
-
 " }}}
 " Function: MakeSyntaxFolds (force) {{{
 " Description: This function calls FoldRegionsWith[No]Skip() several times with the
@@ -177,15 +178,14 @@ function! MakeSyntaxFolds(force, ...)
 		end
 		let b:doneFolding = 0
 	end
-	" Always report a folding performance.
+
+	" Report a folding performance.
 	if exists('*Tex_Debug')
 		call Tex_Debug('Finished folding in ' . reltimestr(reltime(start)) . ' seconds.', 'SyntaxFolds')
 	end
 endfunction
-
-
 " }}}
-" FoldRegionsWithSkip: folding things such as \item's which can be nested. {{{
+" Function: FoldRegionsWithSkip: folding things such as \item's which can be nested. {{{
 function! FoldRegionsWithSkip(startpat, endpat, startoff, endoff, startskip, endskip, line1, line2)
 	exe a:line1
 	" count the regions which have been skipped as we go along. do not want to
@@ -237,17 +237,16 @@ function! FoldRegionsWithSkip(startpat, endpat, startoff, endoff, startskip, end
 
 	call s:Debug('FoldRegionsWithSkip finished')
 endfunction
-
 " }}}
-" FoldRegionsWithNoSkip: folding things such as \sections which do not nest. {{{
+" Function: FoldRegionsWithNoSkip: folding things such as \sections which do not nest. {{{
 function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2, skippedRegions)
-	" Move cursor to (begin of) line1
 	call s:Debug('line1 = '.a:line1.', line2 = ' . a:line2 . ', skippedRegions = ' . string(a:skippedRegions))
-	call s:Debug('searching for ['.a:startpat.']')
 
+	" Move cursor to (begin of) line1
 	exe a:line1
 	normal 0
 
+	call s:Debug('searching for ['.a:startpat.']')
 	let lineBegin = s:MySearch(a:startpat, 'in')
 	call s:Debug('... and finding it at '.lineBegin)
 
@@ -257,6 +256,7 @@ function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2
 			call s:Debug(lineBegin.' is being skipped')
 			continue
 		end
+
 		" Move to end of start pattern:
 		normal! 0
 		call search(a:startpat, 'cWe')
@@ -287,13 +287,12 @@ function! FoldRegionsWithNoSkip(startpat, endpat, startoff, endoff, line1, line2
 	normal $
 	return
 endfunction
-
 " }}}
-" MySearch: just like search(), but returns large number on failure {{{
+" Function: MySearch: just like search(), but returns large number on failure {{{
 function! <SID>MySearch(pat, opt)
 	if a:opt == 'in'
-			normal! 0
-			let ret = search(a:pat, 'cW')
+		normal! 0
+		let ret = search(a:pat, 'cW')
 	else
 		normal! $
 		let ret = search(a:pat, 'W')
@@ -315,8 +314,9 @@ function! IsInSkippedRegion(lnum, regions)
 		end
 	endfor
 	return 0
-endfunction " }}}
-" Debug: A wrapper for Tex_Debug, if it exists and if g:SyntaxFolds_Debug == 1 {{{
+endfunction
+" }}}
+" Function: Debug: A wrapper for Tex_Debug, if it exists and if g:SyntaxFolds_Debug == 1 {{{
 function! <SID>Debug(string)
 	if exists('g:SyntaxFolds_Debug') && g:SyntaxFolds_Debug == 1 && exists('*Tex_Debug')
 		call Tex_Debug(a:string,'SyntaxFolds')

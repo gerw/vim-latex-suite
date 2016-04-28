@@ -1,7 +1,7 @@
 "=============================================================================
 " 	     File: folding.vim
 "      Author: Srinath Avadhanula
-"      		   modifications/additions by Zhang Linbo
+"      		   modifications/additions by Zhang Linbo, Gerd Wachsmuth
 "     Created: Tue Apr 23 05:00 PM 2002 PST
 " 
 "  Description: functions to interact with Syntaxfolds.vim
@@ -35,7 +35,6 @@ function! Tex_SetFoldOptions()
 
 endfunction " }}}
 " Tex_FoldSections: creates section folds {{{
-" Author: Zhang Linbo
 " Description:
 " 	This function takes a comma seperated list of "sections" and creates fold
 " 	definitions for them. The first item is supposed to be the "shallowest" field
@@ -59,7 +58,10 @@ function! Tex_FoldSections(lst, endpat)
 			let pattern .= prefix . '\\' . label . '\|' . '%%fake' . label
 			let prefix = '\|'
 		endfor
-		let s = '^\%(%[ =-]*\n\)\?\s*' . '\%(' . pattern . '\)' . '\W'
+		" The line before the pattern could contain a mixture of "% =_" (within a
+		" comment).
+		" The pattern itself is ended by a non-word character "\W" or a newline.
+		let s = '^\%(%[% =-]*\n\)\?\s*' . '\%(' . pattern . '\)' . '\%(\W\|\n\)'
 	endif
 	let endpat = s . '\|' . a:endpat
 	if i > 0
@@ -104,7 +106,7 @@ function! MakeTexFolds(force)
 	" requires a regexp which will match unbalanced curly braces and that is
 	" apparently not doable with regexps.
 	let s = ''
-    if !exists('g:Tex_FoldedCommands')
+	if !exists('g:Tex_FoldedCommands')
 		let g:Tex_FoldedCommands = s
 	elseif g:Tex_FoldedCommands[0] == ','
 		let g:Tex_FoldedCommands = s . g:Tex_FoldedCommands
@@ -114,7 +116,7 @@ function! MakeTexFolds(force)
 
 	let s = 'verbatim,comment,eq,gather,align,figure,table,thebibliography,'
 			\. 'keywords,abstract,titlepage'
-    if !exists('g:Tex_FoldedEnvironments')
+	if !exists('g:Tex_FoldedEnvironments')
 		let g:Tex_FoldedEnvironments = s
 	elseif g:Tex_FoldedEnvironments[0] == ','
 		let g:Tex_FoldedEnvironments = s . g:Tex_FoldedEnvironments
@@ -122,7 +124,7 @@ function! MakeTexFolds(force)
 		let g:Tex_FoldedEnvironments = g:Tex_FoldedEnvironments . s
 	endif
 	
-    if !exists('g:Tex_FoldedSections')
+	if !exists('g:Tex_FoldedSections')
 		let g:Tex_FoldedSections = 'part,chapter,section,'
 								\. 'subsection,subsubsection,paragraph'
 	endif
@@ -422,7 +424,7 @@ function! TexFoldTextFunction()
 
 		return myfoldtext . header.  ' ('.label.'): '.caption
 
-	elseif getline(v:foldstart) =~ '^\s*%\+[ =-]*$'
+	elseif getline(v:foldstart) =~ '^\s*%\+[% =-]*$'
 		" Useless comment. Use the next line.
 		return myfoldtext . getline(v:foldstart+1)
 	elseif getline(v:foldstart) =~ '^\s*%%fake'
