@@ -85,7 +85,7 @@ def getSectionLabels_Root(lineinfo, section_prefix, label_prefix, value_prefix):
               # Cleveref was detected.
               n = re.search(r'\\newlabel{(%s.*?)@cref}{{\[(.*)\]\[.*\]\[.*\](.*)}{.*}}' % label_prefix, line)
               if n:
-                if n.group(2) == 'equation':
+                if n.group(2) == 'equation' or n.group(2) == 'subequation':
                   # Found an equation
                   prev_txt += '(' + n.group(3) + ')'
                 else:
