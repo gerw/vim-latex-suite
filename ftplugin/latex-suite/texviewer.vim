@@ -70,6 +70,11 @@ function! Tex_Complete(what, where)
 		" 	s:typeoption = '[option=value]'
 		let commandpattern = '.*\\\(\w\{-}\)\*\?\(\[.\{-}\]\)*{\([^ [\]\t}]\+\)\?$'
 
+		" Check for cleveref's range commands
+		" Completing the first argument is already done by the above
+		" commandpattern.
+		let crefrangepattern = '^.*\\[cC]\%(page\)\?refrange\*\?{[^}]*}\s*{\([^ [\]\t}]\+\)\?$'
+
 		" An equation reference is detected by the following pattern.
 		" It matches a opening parenthesis, followed by
 		" a mix of letters, numbers and dots.
@@ -88,6 +93,9 @@ function! Tex_Complete(what, where)
 			let s:type = 'eqref'
 			let s:prefix = substitute(s:curline, eqpattern, '\1', '')
 			let s:refprefix = '\eqref{'
+		elseif s:curline =~ crefrangepattern
+			let s:type = 'crefrange'
+			let s:prefix = substitute(s:curline, crefrangepattern, '\1', '')
 		elseif s:curline =~ otherpattern
 			" User want to complete theorem/remark/... reference
 			let s:type = 'ref'
@@ -103,6 +111,11 @@ function! Tex_Complete(what, where)
 
 		if exists("s:type") && s:type =~ 'ref'
 			if Tex_GetVarValue('Tex_UseOutlineCompletion') == 1
+				if s:type =~ '[cC]' && s:type !~ '[cC]\%(page\)\?refrange'
+					" Prefix is only the stuff after the last comma
+					let s:prefix = matchstr(s:prefix, '\([^,]\+,\)*\zs\([^,]\+\)\ze$')
+				end
+
 				call Tex_Debug("Tex_Complete: using outline search method", "view")
 				call Tex_Debug('Tex_Complete: searching for prefix "'. s:prefix . '"', "view")
 				call Tex_StartOutlineCompletion()
