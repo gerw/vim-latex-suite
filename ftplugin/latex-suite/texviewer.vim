@@ -68,7 +68,7 @@ function! Tex_Complete(what, where)
 		" from which we need to extract
 		" 	s:type = 'psfig'
 		" 	s:typeoption = '[option=value]'
-		let commandpattern = '.*\\\(\w\{-}\)\(\[.\{-}\]\)*{\([^ [\]\t}]\+\)\?$'
+		let commandpattern = '.*\\\(\w\{-}\)\*\?\(\[.\{-}\]\)*{\([^ [\]\t}]\+\)\?$'
 
 		" An equation reference is detected by the following pattern.
 		" It matches a opening parenthesis, followed by
