@@ -232,7 +232,7 @@ if __name__ == "__main__":
     else:
         prefix = ''
 
-    print main(sys.argv[1], prefix)
+    sys.stdout.write(main(sys.argv[1], prefix))
 
 
 # vim: fdm=marker
