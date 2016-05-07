@@ -135,17 +135,55 @@ endif
 " Doesn't count matches inside strings and comments (as defined by current
 " syntax).
 " Copied indent/pov.vim that ships with vim
-function! MatchCount(line, rexp)
-  let str = getline(a:line)
+function! MatchCount(str, rexp)
   let i = 0
   let n = 0
   while i >= 0
-    let i = matchend(str, a:rexp, i)
+    let i = matchend(a:str, a:rexp, i)
     if i >= 0 && synIDattr(synID(a:line, i, 0), "name") !~? "string\|comment"
       let n = n + 1
     endif
   endwhile
   return n
+endfunction
+
+" This function computes the deepest/smallest nesting on the current line. We
+" start with 0, each match of openregexp increases nesting and each match of
+" closeregexp decreases nesting.
+" If next=1, compute the difference between deepest nesting and the nesting at
+" the end of the line
+function! DeepestNesting(line, openregexp, closeregexp, next)
+	let indent = 0
+	let pos = 0
+
+	let deepest = 0
+
+	while pos >= 0
+		let strpos = matchstrpos( a:line, a:openregexp . "\\|" . a:closeregexp, pos )
+		let pos = strpos[2]
+
+		if pos <= 0
+			" No more matches were found.
+			break
+		endif
+
+		" Check if there is an opening or closing match
+		let str = strpos[0]
+		if str =~ a:openregexp
+			let indent += 1
+		else
+			let indent -= 1
+		endif
+
+		" Update deepest indentation
+		let deepest = min([deepest, indent])
+	endwhile
+
+	if !a:next
+		return deepest
+	else
+		return indent - deepest
+	end
 endfunction
 
 function GetTeXIndent()
@@ -180,16 +218,16 @@ function GetTeXIndent()
     let env_open = '\\begin\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
     let env_close = '\\end\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
 
-    let count_env_open = max([0, MatchCount(lnum, env_open) - MatchCount(lnum, env_close)])
-    let count_env_close = max([0, MatchCount(v:lnum, env_close) - MatchCount(v:lnum, env_open)])
+    let count_env_open = max([0, MatchCount(line, env_open) - MatchCount(line, env_close)])
+    let count_env_close = max([0, MatchCount(cline, env_close) - MatchCount(cline, env_open)])
     let ind = ind + &sw * ( count_env_open - count_env_close )
 
     " For itemize-like environments: add or subtract an additional sw
     let env_item_open = '\\begin\s*{\('.g:tex_itemize_env.'\)\*\?}'
     let env_item_close = '\\end\s*{\('.g:tex_itemize_env.'\)\*\?}'
 
-    let count_env_item_open = max([0, MatchCount(lnum, env_item_open) - MatchCount(lnum, env_item_close)])
-    let count_env_item_close = max([0, MatchCount(v:lnum, env_item_close) - MatchCount(v:lnum, env_item_open)])
+    let count_env_item_open = max([0, MatchCount(line, env_item_open) - MatchCount(line, env_item_close)])
+    let count_env_item_close = max([0, MatchCount(cline, env_item_close) - MatchCount(cline, env_item_open)])
     let ind = ind + &sw * ( count_env_item_open - count_env_item_close )
 
 
@@ -197,12 +235,14 @@ function GetTeXIndent()
       let pattern_open = '\([[{(]\|\\left\.\)'
       let pattern_close = '\([]})]\|\\right\.\)'
 
-      " Add a 'shiftwidth' per "{" or "[" or "(" or "\left." on the previous line.
-      let count_braces_open = max([0, MatchCount(lnum, pattern_open) - MatchCount(lnum, pattern_close)])
-      " Remove a 'shiftwidth' per "}" or "]" or ")" or "\right." on the current line.
-      let count_braces_close = max([0, MatchCount(v:lnum, pattern_close) - MatchCount(v:lnum, pattern_open)])
+      " Compute the deepest indentation on the current line
+      let indent_this = DeepestNesting( cline, pattern_open, pattern_close, 0 )
+      " Compute the offset to the deepest indentation from the previous line
+      let indent_prev = DeepestNesting(  line, pattern_open, pattern_close, 1 )
 
-      let ind = ind + &sw * ( count_braces_open - count_braces_close )
+      " Add one shiftwidth per indentation level
+      let ind = ind + &sw * ( indent_this + indent_prev )
+
     endif
 
 
