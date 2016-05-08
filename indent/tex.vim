@@ -140,7 +140,7 @@ function! MatchCount(str, rexp)
   let n = 0
   while i >= 0
     let i = matchend(a:str, a:rexp, i)
-    if i >= 0 && synIDattr(synID(a:line, i, 0), "name") !~? "string\|comment"
+    if i >= 0
       let n = n + 1
     endif
   endwhile
@@ -211,6 +211,10 @@ function GetTeXIndent()
     if cline =~ '^\s*%'
         return indent(v:lnum)
     endif
+
+    " Strip comments
+    let  line = substitute( line, '\\\@<!\(\\\\\)*\zs%.*', '', '')
+    let cline = substitute(cline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
 
     " Add a 'shiftwidth' after beginning
     " and substract a 'shiftwidth' after the end of environments.
