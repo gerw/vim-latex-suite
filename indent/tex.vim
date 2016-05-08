@@ -96,14 +96,6 @@ setlocal nosmartindent
 setlocal indentexpr=Tex_CalcIdent()
 setlocal indentkeys+=},],.,)
 
-" Add indentkeys depending on options
-if g:tex_indent_items
-	exec 'setlocal indentkeys+=' . substitute(g:tex_items, '^\|\(\\|\)', ',0=', 'g')
-endif
-if g:tex_indent_ifelsefi
-	setlocal indentkeys+=0=\\else,0=\\or,0=\\fi
-endif
-
 " Cache {{{
 " Internally, the indentation uses a cache for precompiled patterns
 " and the last indented line. However, the cache cannot be used, if the
@@ -193,6 +185,7 @@ endfunction
 " Function AssemblePatterns: pre-compute patterns{{{
 " This function uses the options to assemble various patterns. These patterns
 " do not depend on the line which is indented and can be pre-computed.
+" This function also sets option-dependent indentkeys
 " Description Of Patterns:
 "   openregexp        Causes 1 indentation more
 "   closeregexp       Causes 1 indentation less
@@ -274,6 +267,22 @@ function! s:AssemblePatterns()
 		" Strip the first '\|'
 		let s:all = s:all[2:]
 	end
+
+
+	" Add indentkeys depending on options
+	let items_keys = substitute(g:tex_items, '^\|\(\\|\)', ',0=', 'g')
+	if g:tex_indent_items
+		exec 'setlocal indentkeys+=' . items_keys
+	else
+		exec 'setlocal indentkeys-=' . items_keys
+	endif
+
+	let ifelsefi_keys = '0=\\else,0=\\or,0=\\fi'
+	if g:tex_indent_ifelsefi
+		exec 'setlocal indentkeys+=' . ifelsefi_keys
+	else
+		exec 'setlocal indentkeys-=' . ifelsefi_keys
+	endif
 endfunction
 " }}}
 " Function Tex_CalcIndent:   to be used as indentexpr {{{
