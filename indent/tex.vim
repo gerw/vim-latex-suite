@@ -104,7 +104,39 @@ if g:tex_indent_ifelsefi
 	setlocal indentkeys+=0=\\else,0=\\or,0=\\fi
 endif
 
-" Function DeepestNesting:
+" Cache {{{
+" Internally, the indentation uses a cache for precompiled patterns
+" and the last indented line. However, the cache cannot be used, if the
+" options have changed.
+"
+" CacheOptions: puts options into a list {{{
+function! s:CacheOptions()
+	return [
+				\ g:tex_indent_brace,
+				\ g:tex_indent_items,
+				\ g:tex_items,
+				\ g:tex_itemize_env,
+				\ g:tex_noindent_env,
+				\ g:tex_indent_ifelsefi,
+				\ ]
+endfunction
+" }}}
+" SetCache: Remembers the options used to set up the cache. {{{
+function! s:SetCache()
+	let s:cache_options = s:CacheOptions()
+endfunction
+" }}}
+" CanUseCache: Can we use the cache? {{{
+function! s:CanUseCache()
+	return s:cache_options == s:CacheOptions()
+endfunction
+" }}}
+" Initialize the cache {{{
+let s:cache_options = []
+" }}}
+" }}}
+
+" Function DeepestNesting:   compute indentation of a line {{{
 " This function computes the deepest/smallest nesting on the current line. We
 " start with 0, each match of openregexp increases nesting and each match of
 " closeregexp decreases nesting.
@@ -112,51 +144,20 @@ endif
 " additional indentation which should be used for the next line.
 " Parameters:
 "   line              This string should be indented
-"   openregexp        Causes 1 indentation more
-"   closeregexp       Causes 1 indentation less
-"   openextraregexp   Causes 2 indentations more
-"   closeextraregexp  Causes 2 indentations less
-"   hangingregexp     Only this line has 1 indentation less
 "
 " All the regexps should be able to be combined via \|, preferably single
 " atoms (enclose them in '\%(', '\)'!)
-function! s:DeepestNesting(line, openregexp, closeregexp, openextraregexp, closeextraregexp, hangingregexp)
+function! s:DeepestNesting(line)
 	let indent = 0
 	let pos = 0
 
 	let deepest = 0
 
-	" Accumulate all patterns.
-	let all = ''
-	if a:openregexp != ''
-		let all .= '\|' . a:openregexp
-	endif
-	if a:closeregexp != ''
-		let all .= '\|' . a:closeregexp
-	endif
-	if a:openextraregexp != ''
-		let all .= '\|' . a:openextraregexp
-	endif
-	if a:closeextraregexp != ''
-		let all .= '\|' . a:closeextraregexp
-	endif
-	if a:hangingregexp != ''
-		let all .= '\|' . a:hangingregexp
-	endif
-	if all == ''
-		" No expressions given. Nothing to do.
-		return [0,0]
-	else
-		" Strip the first '\|'
-		let all = all[2:]
-	end
-
-
 	" Now, we look through the line for matching patterns
 	while pos >= 0
 		" Here, we explicitly use the 'count' option of 'matchstrpos' such that
 		" '^' matches only at the beginning of the string (and not at 'pos')
-		let strpos = matchstrpos( a:line, all, pos, 1 )
+		let strpos = matchstrpos( a:line, s:all, pos, 1 )
 		let pos = strpos[2]
 
 		if pos <= 0
@@ -168,13 +169,13 @@ function! s:DeepestNesting(line, openregexp, closeregexp, openextraregexp, close
 		let str = strpos[0]
 
 		" Check which pattern has matched
-		if str =~ '^' . a:openextraregexp . '$'
+		if str =~ '^' . s:openextraregexp . '$'
 			let indent += 2
-		elseif str =~ '^' . a:closeextraregexp . '$'
+		elseif str =~ '^' . s:closeextraregexp . '$'
 			let indent -= 2
-		elseif str =~ '^' . a:openregexp . '$'
+		elseif str =~ '^' . s:openregexp . '$'
 			let indent += 1
-		elseif str =~ '^' . a:closeregexp . '$'
+		elseif str =~ '^' . s:closeregexp . '$'
 			let indent -= 1
 		else
 			" For a hanging line, do not alter indent,
@@ -188,42 +189,17 @@ function! s:DeepestNesting(line, openregexp, closeregexp, openextraregexp, close
 
 	return [deepest, indent - deepest]
 endfunction
-
-" Function DeepestNesting:
-" This function can be used as indentexpr.
-function! Tex_CalcIdent()
-
-	" Current line number
-	let clnum = v:lnum
-
-	" Code for comment: If current line is a comment, do not alter the
-	" indentation
-	let cline = getline(clnum) " Content of current line
-	if cline =~ '^\s*%'
-		return indent(clnum)
-	endif
-
-	" Find a non-blank line above the current line, which is more than a comment.
-	let plnum = prevnonblank(clnum - 1)
-	while plnum != 0
-		if getline(plnum) !~ '^\s*%'
-			break
-		endif
-		let plnum = prevnonblank(plnum - 1)
-	endwhile
-
-	" At the start of the file use zero indent.
-	if plnum == 0
-		return 0
-	endif
-
-	let pind = indent(plnum)     " Current indentation of previous line
-	let pline = getline(plnum)   " Content of previous line
-
-	" Strip comments
-	let pline = substitute(pline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
-	let cline = substitute(cline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
-
+" }}}
+" Function AssemblePatterns: pre-compute patterns{{{
+" This function uses the options to assemble various patterns. These patterns
+" do not depend on the line which is indented and can be pre-computed.
+" Description Of Patterns:
+"   openregexp        Causes 1 indentation more
+"   closeregexp       Causes 1 indentation less
+"   openextraregexp   Causes 2 indentations more
+"   closeextraregexp  Causes 2 indentations less
+"   hangingregexp     Only this line has 1 indentation less
+function! s:AssemblePatterns()
 	" Add a 'shiftwidth' after beginning
 	" and subtract a 'shiftwidth' after the end of environments.
 	" Don't add it for \begin{document} and \begin{verbatim}, see
@@ -238,15 +214,15 @@ function! Tex_CalcIdent()
 
 	if g:tex_indent_items
 		" For itemize-like environments: add or subtract two 'shiftwidth'
-		let extra_open = '\\begin\s*{\%('.g:tex_itemize_env.'\)\*\?}'
-		let extra_close = '\\end\s*{\%('.g:tex_itemize_env.'\)\*\?}'
+		let s:openextraregexp  = '\\begin\s*{\%('.g:tex_itemize_env.'\)\*\?}'
+		let s:closeextraregexp = '\\end\s*{\%('.g:tex_itemize_env.'\)\*\?}'
 
 		" Special treatment for items, they will hang
 		let hanging = g:tex_items
 	else
 		" Extra environment indentation
-		let extra_open = ''
-		let extra_close = ''
+		let s:openextraregexp  = ''
+		let s:closeextraregexp = ''
 
 		" No hanging expression
 		let hanging = ''
@@ -268,21 +244,107 @@ function! Tex_CalcIdent()
 	end
 
 	" Wrap open and close in parentheses
-	let open  = '\%(' . open  . '\)'
-	let close = '\%(' . close . '\)'
+	let s:openregexp  = '\%(' . open  . '\)'
+	let s:closeregexp = '\%(' . close . '\)'
 
 	" Wrap hanging in parentheses, match only at beginning of line
-	let hanging = '^\s*\%(' . hanging . '\)'
+	let s:hangingregexp = '^\s*\%(' . hanging . '\)'
+
+	" Accumulate all patterns.
+	let s:all = ''
+	if s:openregexp != ''
+		let s:all .= '\|' . s:openregexp
+	endif
+	if s:closeregexp != ''
+		let s:all .= '\|' . s:closeregexp
+	endif
+	if s:openextraregexp != ''
+		let s:all .= '\|' . s:openextraregexp
+	endif
+	if s:closeextraregexp != ''
+		let s:all .= '\|' . s:closeextraregexp
+	endif
+	if s:hangingregexp != ''
+		let s:all .= '\|' . s:hangingregexp
+	endif
+	if s:all == ''
+		" No expressions given. Replace by a regexp which matches nowhere
+		let s:all = '\_$.'
+	else
+		" Strip the first '\|'
+		let s:all = s:all[2:]
+	end
+endfunction
+" }}}
+" Function Tex_CalcIndent:   to be used as indentexpr {{{
+" This function can be used as indentexpr.
+function! Tex_CalcIdent()
+	" Check whether we can use the cache
+	let can_use_cache = s:CanUseCache()
+	call s:SetCache()
+
+	if !can_use_cache
+		call s:AssemblePatterns()
+	endif
+
+	" Current line number
+	let clnum = v:lnum
+
+	" Code for comment: If current line is a comment, do not alter the
+	" indentation
+	let cline = getline(clnum) " Content of current line
+	if cline =~ '^\s*%'
+		return indent(clnum)
+	endif
+
+	" Strip comments
+	let cline = substitute(cline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
+	" Strip leading whitespace
+	let cline = substitute(cline, '^\s*', '', '')
+
+	" Find a non-blank line above the current line, which is more than a comment.
+	let plnum = prevnonblank(clnum - 1)
+	while plnum != 0
+		if getline(plnum) !~ '^\s*%'
+			break
+		endif
+		let plnum = prevnonblank(plnum - 1)
+	endwhile
+
+	" At the start of the file use zero indent.
+	if plnum == 0
+		return 0
+	endif
+
+	" Current indentation of previous line
+	let pind = indent(plnum)
+	" Content of previous line
+	let pline = getline(plnum)
+	" Strip comments
+	let pline = substitute(pline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
+	" Strip leading whitespace
+	let pline = substitute(pline, '^\s*', '', '')
 
 	" Compute the deepest indentation on the current line
-	let indent_this = s:DeepestNesting( cline, open, close, extra_open, extra_close, hanging )
+	let cindent = s:DeepestNesting( cline )
+
 	" Compute the offset to the deepest indentation from the previous line
-	let indent_prev = s:DeepestNesting( pline, open, close, extra_open, extra_close, hanging )
+	if can_use_cache && s:cache_lnum == plnum && s:cache_line ==# pline
+		let pindent = s:cache_indent
+	else
+		let pindent = s:DeepestNesting( pline )
+	endif
+
+	" Cache the result of the current line
+	let s:cache_lnum   = clnum
+	let s:cache_indent = cindent
+	let s:cache_line   = cline
 
 	" Add one shiftwidth per indentation level
-	let ind = pind + &shiftwidth * ( indent_this[0] + indent_prev[1] )
+	let ind = pind + &shiftwidth * ( cindent[0] + pindent[1] )
 
 	return ind
 endfunction
+" }}}
 
 " vim: set noet:
