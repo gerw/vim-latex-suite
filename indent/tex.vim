@@ -1,45 +1,26 @@
 " Vim indent file
-" Language:     LaTeX
-" Maintainer:   Johannes Tanzler <johannes.tanzler@gmail.com>
-" Version: 	0.5-gerw
-" Created:      Sat, 16 Feb 2002 16:50:19 +0100
-" Last Change:	Mar, 27 Jun 2011 11:46:35 +0200
-" Last Update:  18th feb 2002, by LH :
-"               (*) better support for the option
-"               (*) use some regex instead of several '||'.
-"               Oct 9th, 2003, by JT:
-"               (*) don't change indentation of lines starting with '%'
-"               2005/06/15, Moshe Kaminsky <kaminsky@math.huji.ac.il>
-"               (*) New variables:
-"                   g:tex_items, g:tex_itemize_env, g:tex_noindent_env
-"               2011/3/6, by Zhou Yi Chao <broken.zhou@gmail.com>
-"               (*) Don't change indentation of lines starting with '%'
-"                   I don't see any code with '%' and it doesn't work properly
-"                   so I add some code.
-"               (*) New features: Add smartindent-like indent
-"                   for "{}" and  "[]".
-"               (*) New variables: g:tex_indent_brace
 "
 " Options: {{{
 "
-" To set the following options (ok, currently it's just one), add a line like
-"   let g:tex_indent_items = 1
-" to your ~/.vimrc.
+" The options are mostly compatible with the indent/tex.vim distributed by
+" vim.
+" Here, we have one new option: g:tex_indent_ifelsefi
 "
-" * g:tex_indent_brace
+" To set the following options, add a line like
+"   let g:tex_indent_items = 1
+" to your ~/ftplugin/tex.vim.
+"
+"
+" * g:tex_indent_brace = 1
 "
 "   If this variable is unset or non-zero, it will use smartindent-like style
-"   for "{}" and "[]"
+"   for "{}", "[]" and "()".
 "
-" * g:tex_indent_items
+"
+" * g:tex_indent_items = 1
 "
 "   If this variable is set, item-environments are indented like Emacs does
 "   it, i.e., continuation lines are indented with a shiftwidth.
-"
-"   NOTE: I've already set the variable below; delete the corresponding line
-"   if you don't like this behaviour.
-"
-"   Per default, it is unset.
 "
 "              set                                unset
 "   ----------------------------------------------------------------
@@ -51,115 +32,131 @@
 "       \end{itemize}                        \end{itemize}
 "
 "
-" * g:tex_items
+" * g:tex_items = '\\bibitem\|\\item'
 "
 "   A list of tokens to be considered as commands for the beginning of an item
 "   command. The tokens should be separated with '\|'. The initial '\' should
-"   be escaped. The default is '\\bibitem\|\\item'.
+"   be escaped.
 "
-" * g:tex_itemize_env
+"
+" * g:tex_itemize_env = 'itemize\|description\|enumerate\|thebibliography'.
 "
 "   A list of environment names, separated with '\|', where the items (item
-"   commands matching g:tex_items) may appear. The default is
-"   'itemize\|description\|enumerate\|thebibliography'.
+"   commands matching g:tex_items) may appear.
 "
-" * g:tex_noindent_env
+"
+" * g:tex_noindent_env = 'document\|verbatim\|comment\|lstlisting'
 "
 "   A list of environment names. separated with '\|', where no indentation is
-"   required. The default is 'document\|verbatim\|comment\|lstlisting'.
+"   required.
 "
-" }}}
 "
-" License: {{{
-" Copyright (c) 2002-2011 Johannes Tanzler <johannes.tanzler@gmail.com>
-
-" Permission is hereby granted, free of charge, to any person obtaining
-" a copy of this software and associated documentation files (the
-" "Software"), to deal in the Software without restriction, including
-" without limitation the rights to use, copy, modify, merge, publish,
-" distribute, sublicense, and/or sell copies of the Software, and to
-" permit persons to whom the Software is furnished to do so, subject to
-" the following conditions:
+" * g:tex_indent_ifelsefi = 1
 "
-" The above copyright notice and this permission notice shall be included
-" in all copies or substantial portions of the Software.
+"   If this is set to one, we try to indent something like
+"   \ifnum...
+"     bar
+"   \else
+"     foo
+"   \fi
+"   correctly. This is quite tough, since there are commands like
+"   \ifthenelse{condition}{then}{else}, which uses braces instead of \else and
+"   \fi. Our heuristic: only add indentation, if \if... is not followed by a
+"   '{', (and only if \if,\else,\or,\fi occur at the beginning of the line).
 "
-" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " }}}
 
 if exists("b:did_indent")
-    finish
+	finish
 endif
 let b:did_indent = 1
 
-" Delete the next line to avoid the special indention of items
-if !exists("g:tex_indent_items")
-    let g:tex_indent_items = 1
-endif
+" Check whether the options exist and assign default values
 if !exists("g:tex_indent_brace")
-    let g:tex_indent_brace = 1
+	let g:tex_indent_brace = 1
 endif
-if g:tex_indent_items
-    if !exists("g:tex_itemize_env")
-        let g:tex_itemize_env = 'itemize\|description\|enumerate\|thebibliography'
-    endif
-    if !exists('g:tex_items')
-        let g:tex_items = '\\bibitem\|\\item'
-    endif
-else
-    let g:tex_items = ''
+if !exists("g:tex_indent_items")
+	let g:tex_indent_items = 1
 endif
-
+if !exists('g:tex_items')
+	let g:tex_items = '\\bibitem\|\\item'
+endif
+if !exists("g:tex_itemize_env")
+	let g:tex_itemize_env = 'itemize\|description\|enumerate\|thebibliography'
+endif
 if !exists("g:tex_noindent_env")
-    let g:tex_noindent_env = 'document\|verbatim\|comment\|lstlisting'
+	let g:tex_noindent_env = 'document\|verbatim\|comment\|lstlisting'
+endif
+if !exists("g:tex_indent_ifelsefi")
+	let g:tex_indent_ifelsefi = 1
 endif
 
 setlocal autoindent
 setlocal nosmartindent
-setlocal indentexpr=GetTeXIndent()
-exec 'setlocal indentkeys+=},],.,)' . substitute(g:tex_items, '^\|\(\\|\)', ',=', 'g')
-let g:tex_items = '^\s*' . g:tex_items
+setlocal indentexpr=Tex_CalcIdent()
+setlocal indentkeys+=},],.,)
 
-
-" Only define the function once
-if exists("*GetTeXIndent") | finish
+" Add indentkeys depending on options
+if g:tex_indent_items
+	exec 'setlocal indentkeys+=' . substitute(g:tex_items, '^\|\(\\|\)', ',0=', 'g')
+endif
+if g:tex_indent_ifelsefi
+	setlocal indentkeys+=0=\\else,0=\\or,0=\\fi
 endif
 
-" Counts matches of a regexp <rexp> in line number <line>.
-" Doesn't count matches inside strings and comments (as defined by current
-" syntax).
-" Copied indent/pov.vim that ships with vim
-function! MatchCount(str, rexp)
-  let i = 0
-  let n = 0
-  while i >= 0
-    let i = matchend(a:str, a:rexp, i)
-    if i >= 0
-      let n = n + 1
-    endif
-  endwhile
-  return n
-endfunction
-
+" Function DeepestNesting:
 " This function computes the deepest/smallest nesting on the current line. We
 " start with 0, each match of openregexp increases nesting and each match of
 " closeregexp decreases nesting.
-" If next=1, compute the difference between deepest nesting and the nesting at
-" the end of the line
-function! DeepestNesting(line, openregexp, closeregexp, next)
+" The return value is the deepest indentation of the current line and the
+" additional indentation which should be used for the next line.
+" Parameters:
+"   line              This string should be indented
+"   openregexp        Causes 1 indentation more
+"   closeregexp       Causes 1 indentation less
+"   openextraregexp   Causes 2 indentations more
+"   closeextraregexp  Causes 2 indentations less
+"   hangingregexp     Only this line has 1 indentation less
+"
+" All the regexps should be able to be combined via \|, preferably single
+" atoms (enclose them in '\%(', '\)'!)
+function! s:DeepestNesting(line, openregexp, closeregexp, openextraregexp, closeextraregexp, hangingregexp)
 	let indent = 0
 	let pos = 0
 
 	let deepest = 0
 
+	" Accumulate all patterns.
+	let all = ''
+	if a:openregexp != ''
+		let all .= '\|' . a:openregexp
+	endif
+	if a:closeregexp != ''
+		let all .= '\|' . a:closeregexp
+	endif
+	if a:openextraregexp != ''
+		let all .= '\|' . a:openextraregexp
+	endif
+	if a:closeextraregexp != ''
+		let all .= '\|' . a:closeextraregexp
+	endif
+	if a:hangingregexp != ''
+		let all .= '\|' . a:hangingregexp
+	endif
+	if all == ''
+		" No expressions given. Nothing to do.
+		return [0,0]
+	else
+		" Strip the first '\|'
+		let all = all[2:]
+	end
+
+
+	" Now, we look through the line for matching patterns
 	while pos >= 0
-		let strpos = matchstrpos( a:line, a:openregexp . "\\|" . a:closeregexp, pos )
+		" Here, we explicitly use the 'count' option of 'matchstrpos' such that
+		" '^' matches only at the beginning of the string (and not at 'pos')
+		let strpos = matchstrpos( a:line, all, pos, 1 )
 		let pos = strpos[2]
 
 		if pos <= 0
@@ -169,105 +166,123 @@ function! DeepestNesting(line, openregexp, closeregexp, next)
 
 		" Check if there is an opening or closing match
 		let str = strpos[0]
-		if str =~ a:openregexp
+
+		" Check which pattern has matched
+		if str =~ '^' . a:openextraregexp . '$'
+			let indent += 2
+		elseif str =~ '^' . a:closeextraregexp . '$'
+			let indent -= 2
+		elseif str =~ '^' . a:openregexp . '$'
 			let indent += 1
-		else
+		elseif str =~ '^' . a:closeregexp . '$'
 			let indent -= 1
+		else
+			" For a hanging line, do not alter indent,
+			" but possibly update the deepest indentation
+			let deepest = min([deepest, indent - 1])
 		endif
 
 		" Update deepest indentation
 		let deepest = min([deepest, indent])
 	endwhile
 
-	if !a:next
-		return deepest
+	return [deepest, indent - deepest]
+endfunction
+
+" Function DeepestNesting:
+" This function can be used as indentexpr.
+function! Tex_CalcIdent()
+
+	" Current line number
+	let clnum = v:lnum
+
+	" Code for comment: If current line is a comment, do not alter the
+	" indentation
+	let cline = getline(clnum) " Content of current line
+	if cline =~ '^\s*%'
+		return indent(clnum)
+	endif
+
+	" Find a non-blank line above the current line, which is more than a comment.
+	let plnum = prevnonblank(clnum - 1)
+	while plnum != 0
+		if getline(plnum) !~ '^\s*%'
+			break
+		endif
+		let plnum = prevnonblank(plnum - 1)
+	endwhile
+
+	" At the start of the file use zero indent.
+	if plnum == 0
+		return 0
+	endif
+
+	let pind = indent(plnum)     " Current indentation of previous line
+	let pline = getline(plnum)   " Content of previous line
+
+	" Strip comments
+	let pline = substitute(pline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
+	let cline = substitute(cline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
+
+	" Add a 'shiftwidth' after beginning
+	" and subtract a 'shiftwidth' after the end of environments.
+	" Don't add it for \begin{document} and \begin{verbatim}, see
+	" g:tex_noindent_env
+	let open = '\\begin\s*{\%('.g:tex_noindent_env.'\)\@!.\{-\}}'
+	let close = '\\end\s*{\%('.g:tex_noindent_env.'\)\@!.\{-\}}'
+
+	if g:tex_indent_brace
+		let open  = open  . '\|[[{(]\|\\left\.'
+		let close = close . '\|[]})]\|\\right\.'
+	endif
+
+	if g:tex_indent_items
+		" For itemize-like environments: add or subtract two 'shiftwidth'
+		let extra_open = '\\begin\s*{\%('.g:tex_itemize_env.'\)\*\?}'
+		let extra_close = '\\end\s*{\%('.g:tex_itemize_env.'\)\*\?}'
+
+		" Special treatment for items, they will hang
+		let hanging = g:tex_items
 	else
-		return indent - deepest
+		" Extra environment indentation
+		let extra_open = ''
+		let extra_close = ''
+
+		" No hanging expression
+		let hanging = ''
+	endif
+
+	if g:tex_indent_ifelsefi
+		" Do match '\if..' only if it is not followed by '{'
+		" Require \fi, and \if... only at beginning of line
+		" Exception: '\expandafter\ifx\csname barfoo \endcsname'
+		"            is quite common and indented.
+		let open .= '\|^\s*\%(\\expandafter\)\?\\if\a*\>{\@!'
+		let close .= '\|^\s*\\fi\>'
+		let elseor = '\\else\>\|\\or\>'
+		if hanging != ''
+			let hanging = elseor . '\|' . hanging
+		else
+			let hanging = elseor
+		end
 	end
+
+	" Wrap open and close in parentheses
+	let open  = '\%(' . open  . '\)'
+	let close = '\%(' . close . '\)'
+
+	" Wrap hanging in parentheses, match only at beginning of line
+	let hanging = '^\s*\%(' . hanging . '\)'
+
+	" Compute the deepest indentation on the current line
+	let indent_this = s:DeepestNesting( cline, open, close, extra_open, extra_close, hanging )
+	" Compute the offset to the deepest indentation from the previous line
+	let indent_prev = s:DeepestNesting( pline, open, close, extra_open, extra_close, hanging )
+
+	" Add one shiftwidth per indentation level
+	let ind = pind + &shiftwidth * ( indent_this[0] + indent_prev[1] )
+
+	return ind
 endfunction
 
-function GetTeXIndent()
-
-    " Find a non-blank line above the current line.
-    let lnum = prevnonblank(v:lnum - 1)
-
-    " New code for comments: Comments is not what we need.
-    while lnum != 0
-        if getline(lnum) !~ '^\s*%'
-            break
-        endif
-        let lnum = prevnonblank(lnum - 1)
-    endwhile
-
-    " At the start of the file use zero indent.
-    if lnum == 0 | return 0
-    endif
-
-    let ind = indent(lnum)
-    let line = getline(lnum)             " last line
-    let cline = getline(v:lnum)          " current line
-
-    " New code for comment: retain the indent of current line
-    if cline =~ '^\s*%'
-        return indent(v:lnum)
-    endif
-
-    " Strip comments
-    let  line = substitute( line, '\\\@<!\(\\\\\)*\zs%.*', '', '')
-    let cline = substitute(cline, '\\\@<!\(\\\\\)*\zs%.*', '', '')
-
-    " Add a 'shiftwidth' after beginning
-    " and substract a 'shiftwidth' after the end of environments.
-    " Don't add it for \begin{document} and \begin{verbatim}
-    let env_open = '\\begin\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
-    let env_close = '\\end\s*{\('.g:tex_noindent_env.'\)\@!.\{-\}}'
-
-    let count_env_open = max([0, MatchCount(line, env_open) - MatchCount(line, env_close)])
-    let count_env_close = max([0, MatchCount(cline, env_close) - MatchCount(cline, env_open)])
-    let ind = ind + &sw * ( count_env_open - count_env_close )
-
-    " For itemize-like environments: add or subtract an additional sw
-    let env_item_open = '\\begin\s*{\('.g:tex_itemize_env.'\)\*\?}'
-    let env_item_close = '\\end\s*{\('.g:tex_itemize_env.'\)\*\?}'
-
-    let count_env_item_open = max([0, MatchCount(line, env_item_open) - MatchCount(line, env_item_close)])
-    let count_env_item_close = max([0, MatchCount(cline, env_item_close) - MatchCount(cline, env_item_open)])
-    let ind = ind + &sw * ( count_env_item_open - count_env_item_close )
-
-
-    if g:tex_indent_brace
-      let pattern_open = '\([[{(]\|\\left\.\)'
-      let pattern_close = '\([]})]\|\\right\.\)'
-
-      " Compute the deepest indentation on the current line
-      let indent_this = DeepestNesting( cline, pattern_open, pattern_close, 0 )
-      " Compute the offset to the deepest indentation from the previous line
-      let indent_prev = DeepestNesting(  line, pattern_open, pattern_close, 1 )
-
-      " Add one shiftwidth per indentation level
-      let ind = ind + &sw * ( indent_this + indent_prev )
-
-    endif
-
-
-    " Special treatment for 'item'
-    " ----------------------------
-
-    if g:tex_indent_items
-
-        " '\item' or '\bibitem' itself:
-        if cline =~ g:tex_items
-            let ind = ind - &sw
-        endif
-
-        " lines following to '\item' are intented once again:
-        if line =~ g:tex_items
-            let ind = ind + &sw
-        endif
-
-    endif
-
-    return ind
-endfunction
-
-" vim: set sw=4 textwidth=78:
+" vim: set noet:
