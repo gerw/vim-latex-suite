@@ -100,7 +100,17 @@ function! Tex_Complete(what, where)
 			" User want to complete theorem/remark/... reference
 			let s:type = 'ref'
 			let s:prefix = substitute(s:curline, otherpattern, '\1', '')
-			let s:refprefix = '\' . Tex_GetVarValue('Tex_RefCompletionCommand', 'ref') . '{'
+			if s:curline !~ commandpattern
+				" If commandpattern does not match, we need to insert additionally a
+				" \ref-command.
+				let s:refprefix = '\' . Tex_GetVarValue('Tex_RefCompletionCommand', 'ref') . '{'
+			else
+				" If commandpattern does match, we are completing something like
+				" \ref{theorem.
+				" or
+				" \cref{theorem.1,theorem.
+				" So, s:refprefix should remain empty. Nothing to do here.
+			endif
 		elseif s:curline =~ commandpattern
 			let s:type = substitute(s:curline, commandpattern, '\1', 'e')
 			let s:typeoption = substitute(s:curline, commandpattern, '\2', 'e')
