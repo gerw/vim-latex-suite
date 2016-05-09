@@ -69,6 +69,13 @@
 if exists("b:did_indent")
 	finish
 endif
+if v:version < 700
+	echohl WarningMsg
+	echo "Indentation of latex-suite requires vim version >= 700.\n"
+				\ . "Fallback to default indentation."
+	echohl None
+	finish
+endif
 let b:did_indent = 1
 
 " Check whether the options exist and assign default values
@@ -147,18 +154,32 @@ function! s:DeepestNesting(line)
 
 	" Now, we look through the line for matching patterns
 	while pos >= 0
-		" Here, we explicitly use the 'count' option of 'matchstrpos' such that
-		" '^' matches only at the beginning of the string (and not at 'pos')
-		let strpos = matchstrpos( a:line, s:all, pos, 1 )
-		let pos = strpos[2]
+		" Look for the next match of one of the patterns.
+
+		" Do we have the function matchstrpos() (introduced in version 7.4.1684)?
+		if exists('*matchstrpos')
+			" Here, we explicitly use the 'count' option of 'matchstrpos' such that
+			" '^' matches only at the beginning of the string (and not at 'pos')
+			let strpos = matchstrpos( a:line, s:all, pos, 1 )
+			let pos = strpos[2]
+			let str = strpos[0]
+		else
+			" Here, we explicitly use the 'count' option of 'match'/'matchend' such that
+			" '^' matches only at the beginning of the string (and not at 'pos')
+			" Does not work with version < 7
+			let start = match( a:line, s:all, pos, 1 )
+			if start < 0
+				" No more matches were found.
+				break
+			end
+			let pos = matchend( a:line, s:all, start, 1 )
+			let str = a:line[ start : pos-1 ]
+		end
 
 		if pos <= 0
 			" No more matches were found.
 			break
 		endif
-
-		" Check if there is an opening or closing match
-		let str = strpos[0]
 
 		" Check which pattern has matched
 		if str =~ '^' . s:openextraregexp . '$'
