@@ -71,7 +71,7 @@ function! <SID>ReadTemplate(...)
 	let _formatoptions = &formatoptions
 	" Since IMAP_PutTextWithMovement simulates the key-presses, leading
 	" indentation can get duplicated in strange ways if ``formatoptions`` is non-empty.
-	set formatoptions = paste
+	set formatoptions=
 
 	call Tex_Debug("normal! i\<C-r>=IMAP_PutTextWithMovement(@a, '".s:phsTemp."', '".s:pheTemp."')\<CR>", 'templates')
 	silent exec "normal! i\<C-r>=IMAP_PutTextWithMovement(@a, '".s:phsTemp."', '".s:pheTemp."')\<CR>"
