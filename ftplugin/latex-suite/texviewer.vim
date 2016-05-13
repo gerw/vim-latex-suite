@@ -794,10 +794,10 @@ function! Tex_StartOutlineCompletion()
 	let mainfname = Tex_GetMainFileName(':p')
 
 	if Tex_UsePython()
-		python retval = auxoutline.main(vim.eval("Tex_GetMainFileName(':p')"), vim.eval("s:prefix"))
+		exec g:Tex_PythonCmd . ' retval = auxoutline.main("""' . mainfname . '""", """' . s:prefix . '""")'
 
 		" transfer variable from python to a local variable.
-		python vim.command("""let retval = "%s" """ % re.sub(r'"|\\', r'\\\g<0>', retval))
+		exec g:Tex_PythonCmd . ' vim.command("""let retval = "%s" """ % re.sub(r"\"|\\", r"\\\g<0>", retval))'
 	else
 		let retval = system(shellescape(s:path.'/auxoutline.py').' '.shellescape(mainfname).' '.shellescape(s:prefix))
 	endif
@@ -832,16 +832,10 @@ function! Tex_StartOutlineCompletion()
     setlocal foldmethod=marker
     setlocal foldmarker=<<<,>>>
 
-	if Tex_UsePython()
-		exec g:Tex_PythonCmd . ' retval = outline.main("""' . mainfname . '""", """' . s:prefix . '""")'
-		exec g:Tex_PythonCmd . ' vim.current.buffer[:] = retval.splitlines()'
-	else
-		" delete everything in it to the blackhole
-		% d _
+	" delete everything in it to the blackhole
+	% d _
 
-		let retval = system(shellescape(s:path.'/outline.py').' '.shellescape(mainfname).' '.shellescape(s:prefix))
-		0put!=retval
-	endif
+	0put!=retval
 
 	0
 

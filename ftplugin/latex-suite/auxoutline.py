@@ -10,7 +10,11 @@
 import re
 import os
 import sys
-import StringIO
+if sys.version_info <= (3, 0):
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
 
 # getFileContents {{{
 def getFileContents(fname):
@@ -60,8 +64,8 @@ def stripComments(contents):
 # }}}
 # getSectionLabels_Root {{{
 def getSectionLabels_Root(lineinfo, section_prefix, label_prefix, value_prefix):
-    outstr = StringIO.StringIO('')
-    pres_depth = section_prefix
+    outstr = StringIO('')
+    indent = ' ' * (2*section_prefix - 2)
 
     # Check for cleveref
     if re.search(r'\\newlabel{.*@cref}' , lineinfo ):
@@ -80,6 +84,7 @@ def getSectionLabels_Root(lineinfo, section_prefix, label_prefix, value_prefix):
         # we found a label!
         m = re.search(r'\\newlabel{(%s.*?)(@cref)?}' % label_prefix, line)
         if m and not re.search(r'^tocindent-?[0-9]*$', m.group(1)):
+            label = m.group(1)
 
             if cleveref:
               # Cleveref was detected.
@@ -121,8 +126,8 @@ def getSectionLabels_Root(lineinfo, section_prefix, label_prefix, value_prefix):
 
             if prev_txt != "" and re.match( value_prefix, prev_txt):
                 # Print label and counter+number:
-                print >>outstr, '>%s%s' % (' '*(2*pres_depth-2), m.group(1))
-                print >>outstr, ':%s%s' % (' '*(2*pres_depth+0), prev_txt)
+                outstr.write('>%s%s\n'   % (indent, label))
+                outstr.write(':%s  %s\n' % (indent, prev_txt))
 
     return outstr.getvalue()
 # }}}
@@ -169,7 +174,7 @@ def getSectionLabels(lineinfo,
             section_name = o4.group(1)
             section_number = ''
           else:
-            print 'Unknown heading format "%s"' % sections[i]
+            print('Unknown heading format "%s"' % sections[i])
             section_name = "Unknown Name"
             section_number = "??"
           sec_heading = 2*' '*(section_prefix-1)
