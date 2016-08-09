@@ -3488,8 +3488,8 @@ templates.
 
 
 
-g:Tex_CustomTemplateFolder                                *ls_11_11_1* *ls_a_ec*
-                                                      *Tex_CustomTemplateFolder*
+g:Tex_CustomTemplateDirectory                             *ls_11_11_1* *ls_a_ec*
+                                                   *Tex_CustomTemplateDirectory*
 
 
 Type             string
