@@ -3490,123 +3490,6 @@ endif</programlisting>
   </section>
   <section id="customizing-macros">
    <title>Macro Customization</title>
-   <section id="customizing-both">
-    <title>Customizations concerning insertion of environments and commands</title>
-    <section id="macro-enabling">
-     <title>Enabling / disabling macros</title>
-     <para>
-      The following variables disable various parts of the macro functionality
-      of &ls;. See the links to the relevant sections to see what functionality
-      setting each of the variables to zero will take away.
-     </para>
-     <anchor id="Tex_EnvironmentMaps" />
-     <anchor id="Tex_EnvironmentMenus" />
-     <anchor id="Tex_FontMaps" />
-     <anchor id="Tex_FontMenus" />
-     <anchor id="Tex_SectionMaps" />
-     <anchor id="Tex_SectionMenus" />
-     <informaltable frame="all">
-      <tgroup cols="3">
-       <thead>
-        <row><entry>Setting</entry><entry>Link to relevant section</entry><entry>Default Value</entry></row>
-       </thead>
-       <tbody>
-        <row><entry><literal>g:Tex_EnvironmentMaps
-        </literal></entry><entry><link linkend="environment-mappings">Environment Mappings</link></entry><entry>1</entry></row>
-        <row><entry><literal>g:Tex_EnvironmentMenus</literal></entry><entry></entry><entry>1</entry></row>
-        <row><entry><literal>g:Tex_FontMaps        </literal></entry><entry><link linkend="font-maps">Font Mappings</link></entry><entry>1</entry></row>
-        <row><entry><literal>g:Tex_FontMenus       </literal></entry><entry></entry><entry>1</entry></row>
-        <row><entry><literal>g:Tex_SectionMaps     </literal></entry><entry><link linkend="section-mappings">Section Mappings</link></entry><entry>1</entry></row>
-        <row><entry><literal>g:Tex_SectionMenus    </literal></entry><entry></entry><entry>1</entry></row>
-       </tbody>
-      </tgroup>
-     </informaltable>
-    </section>
-    <section id="Imap_FreezeImap">
-     <title>g:Imap_FreezeImap</title>
-     <para>
-      <informaltable frame="all">
-       <tgroup cols="2">
-        <tbody>
-         <row><entry>Type</entry><entry>boolean</entry></row>
-         <row><entry>Default Value</entry>
-          <entry><literal>0</literal></entry></row>
-        </tbody>
-       </tgroup>
-      </informaltable>
-      <para>
-       This option when set to 1, temporarily freezes &ls;'s macro
-       expansion. It might be useful when you are using some other keymap
-       which is causing excessive macro expansion. Use a buffer-local
-       variable of the same name if you wish to affect just the present
-       buffer. 
-      </para>
-     </para>
-    </section>
-    <section id="Tex_CatchVisMapErrors">
-     <title>g:Tex_CatchVisMapErrors</title>
-     <informaltable frame="all">
-      <tgroup cols="2">
-       <tbody>
-        <row><entry>Type</entry><entry>Boolean</entry></row>
-        <row><entry>Default Value</entry>
-         <entry><literal>1</literal></entry></row>
-       </tbody>
-      </tgroup>
-     </informaltable>
-     <para>
-      With so many visual maps, its helpful to have a way of catching typing
-      errors made in visual mode. What this does is to prompt you to correct
-      your visual mode mapping if you start out with <literal><link
-        linkend="Tex_Leader">g:Tex_Leader</link></literal> and then type some
-      illegal keys. It basically maps just the <literal>g:Tex_Leader</literal>
-      character to a function.
-     </para>
-    </section>
-    <section id="Tex_Leader">
-     <title>g:Tex_Leader</title>
-     <informaltable frame="all">
-      <tgroup cols="2">
-       <tbody>
-        <row><entry>Type</entry><entry>String</entry></row>
-        <row><entry>Default Value</entry>
-         <entry><literal>'`'</literal></entry></row>
-       </tbody>
-      </tgroup>
-     </informaltable>
-     <para>
-      The mappings in &ls; are by default prefixed with the back-tick
-      character. For example, <literal>`/</literal> inserts
-      <literal>\frac{&ph;}{&ph;}&ph;</literal> etc. You can change the
-      prefix with the following setting.
-      <literal>','</literal>, <literal>'/'</literal>,
-      <literal>'`'</literal> are preferred values. <literal>''</literal> or
-      <literal>'\'</literal> will lead to a <emphasis>lot</emphasis> of
-      trouble.
-     </para>
-     <para>
-      g:Tex_Leader is also used for visual mode mappings for fonts.
-     </para>
-    </section>
-    <section id="Tex_Leader2">
-     <title>g:Tex_Leader2</title>
-     <informaltable frame="all">
-      <tgroup cols="2">
-       <tbody>
-        <row><entry>Type</entry><entry>String</entry></row>
-        <row><entry>Default Value</entry>
-         <entry><literal>','</literal></entry></row>
-       </tbody>
-      </tgroup>
-     </informaltable>
-     <para>
-      In order to avoid clashes between the large number of visual mode macros
-      provided, the <link linkend="enclosing-env-threeletter">visual mode
-       macros for environments</link> and sections start with a character
-      different from <literal>g:Tex_Leader</literal>.
-     </para>
-    </section>
-   </section>
    <section id="customizing-macros-environments">
     <title>Customizing the macros concerning environments</title>
     <section id="Tex_Env_name">
@@ -3667,7 +3550,7 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
        <programlisting>
 \begin{equation}
       &ph;
-      \label{eq:&ph;}    
+      \label{eq:&ph;}
 \end{equation}&ph;</programlisting>
        This setting works for the environments
        <literal>figure</literal>,
@@ -3702,7 +3585,7 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
        <programlisting>
 \begin{equation}
       &ph;
-      \label{&ph;}    
+      \label{&ph;}
 \end{equation}
 &ph;</programlisting>
       </para>
@@ -3722,7 +3605,7 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
        If <literal>Tex_LabelAfterContent</literal> is set to <literal>0</literal>, the label is placed before the content of the environment:
        <programlisting>
 \begin{equation}
-      \label{&ph;}    
+      \label{&ph;}
       &ph;
 \end{equation}&ph;</programlisting>
       </para>
@@ -3825,7 +3708,7 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
       <tgroup cols="2">
        <tbody>
         <row><entry>Type</entry><entry>String</entry></row>
-        <row><entry>Default Value</entry> 
+        <row><entry>Default Value</entry>
          <entry>
           <literal>'footnote,cite,pageref,label'</literal>
          </entry>
@@ -3881,6 +3764,77 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
      </para>
     </section>
    </section>
+   <section id="macro-enabling">
+    <title>Enabling / disabling macros</title>
+    <para>
+     The following variables disable various parts of the macro functionality
+     of &ls;. See the links to the relevant sections to see what functionality
+     setting each of the variables to zero will take away.
+    </para>
+    <anchor id="Tex_EnvironmentMaps" />
+    <anchor id="Tex_EnvironmentMenus" />
+    <anchor id="Tex_FontMaps" />
+    <anchor id="Tex_FontMenus" />
+    <anchor id="Tex_SectionMaps" />
+    <anchor id="Tex_SectionMenus" />
+    <informaltable frame="all">
+     <tgroup cols="3">
+      <thead>
+       <row><entry>Setting</entry><entry>Link to relevant section</entry><entry>Default Value</entry></row>
+      </thead>
+      <tbody>
+       <row><entry><literal>g:Tex_EnvironmentMaps
+       </literal></entry><entry><link linkend="environment-mappings">Environment Mappings</link></entry><entry>1</entry></row>
+       <row><entry><literal>g:Tex_EnvironmentMenus</literal></entry><entry></entry><entry>1</entry></row>
+       <row><entry><literal>g:Tex_FontMaps        </literal></entry><entry><link linkend="font-maps">Font Mappings</link></entry><entry>1</entry></row>
+       <row><entry><literal>g:Tex_FontMenus       </literal></entry><entry></entry><entry>1</entry></row>
+       <row><entry><literal>g:Tex_SectionMaps     </literal></entry><entry><link linkend="section-mappings">Section Mappings</link></entry><entry>1</entry></row>
+       <row><entry><literal>g:Tex_SectionMenus    </literal></entry><entry></entry><entry>1</entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+   </section>
+   <section id="Imap_FreezeImap">
+    <title>g:Imap_FreezeImap</title>
+    <para>
+     <informaltable frame="all">
+      <tgroup cols="2">
+       <tbody>
+        <row><entry>Type</entry><entry>boolean</entry></row>
+        <row><entry>Default Value</entry>
+         <entry><literal>0</literal></entry></row>
+       </tbody>
+      </tgroup>
+     </informaltable>
+     <para>
+      This option when set to 1, temporarily freezes &ls;'s macro
+      expansion. It might be useful when you are using some other keymap
+      which is causing excessive macro expansion. Use a buffer-local
+      variable of the same name if you wish to affect just the present
+      buffer.
+     </para>
+    </para>
+   </section>
+   <section id="Tex_CatchVisMapErrors">
+    <title>g:Tex_CatchVisMapErrors</title>
+    <informaltable frame="all">
+     <tgroup cols="2">
+      <tbody>
+       <row><entry>Type</entry><entry>Boolean</entry></row>
+       <row><entry>Default Value</entry>
+        <entry><literal>1</literal></entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <para>
+     With so many visual maps, its helpful to have a way of catching typing
+     errors made in visual mode. What this does is to prompt you to correct
+     your visual mode mapping if you start out with <literal><link
+       linkend="Tex_Leader">g:Tex_Leader</link></literal> and then type some
+     illegal keys. It basically maps just the <literal>g:Tex_Leader</literal>
+     character to a function.
+    </para>
+   </section>
    <section id="Tex_Diacritics">
     <title>g:Tex_Diacritics</title>
     <informaltable frame="all">
@@ -3894,6 +3848,49 @@ let g:Tex_EnvLabelprefix_equation = "eq:"</programlisting>
     <para>
      Whether or not you want to use <link
       linkend="diacritic-mappings">diacritics</link>.
+    </para>
+   </section>
+   <section id="Tex_Leader">
+    <title>g:Tex_Leader</title>
+    <informaltable frame="all">
+     <tgroup cols="2">
+      <tbody>
+       <row><entry>Type</entry><entry>String</entry></row>
+       <row><entry>Default Value</entry>
+        <entry><literal>'`'</literal></entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <para>
+     The mappings in &ls; are by default prefixed with the back-tick
+     character. For example, <literal>`/</literal> inserts
+     <literal>\frac{&ph;}{&ph;}&ph;</literal> etc. You can change the
+     prefix with the following setting.
+     <literal>','</literal>, <literal>'/'</literal>,
+     <literal>'`'</literal> are preferred values. <literal>''</literal> or
+     <literal>'\'</literal> will lead to a <emphasis>lot</emphasis> of
+     trouble.
+    </para>
+    <para>
+     g:Tex_Leader is also used for visual mode mappings for fonts.
+    </para>
+   </section>
+   <section id="Tex_Leader2">
+    <title>g:Tex_Leader2</title>
+    <informaltable frame="all">
+     <tgroup cols="2">
+      <tbody>
+       <row><entry>Type</entry><entry>String</entry></row>
+       <row><entry>Default Value</entry>
+        <entry><literal>','</literal></entry></row>
+      </tbody>
+     </tgroup>
+    </informaltable>
+    <para>
+     In order to avoid clashes between the large number of visual mode macros
+     provided, the <link linkend="enclosing-env-threeletter">visual mode
+      macros for environments</link> and sections start with a character
+     different from <literal>g:Tex_Leader</literal>.
     </para>
    </section>
   </section>
