@@ -2356,7 +2356,7 @@ let g:Tex_CompileRule_pdf = 'ps2pdf $*.ps'</programlisting>
   <para>
    When you open up a LaTeX file, all the portions will be automatically folded
    up. However, no new folds will be created until you press
-   <literal>&lt;F6&gt;</literal> or <literal>\rf</literal>. (rf
+   <literal>\rf</literal>. (rf
    stands for "refresh folds").
   </para>
   <para>
@@ -2437,6 +2437,13 @@ A short introduction of the features of Latex-Suite.
 \subsection{Installation}
 Installation instructions.</programlisting>
      Without the <literal>%%fakesubsection</literal> the introduction would not be folded separately from the section.
+    </para>
+    <para>
+      It is also possible, to add section names at the same
+      level of hierarchy. These have to be separated by "|".
+      This is, e.g., useful for the KOMA classes, which add
+      "\addcap":
+      <programlisting>" let g:Tex_FoldedSections = 'part|addpart,chapter|addchap,section|addsec,subsection,subsubsection,paragraph,subparagraph'</programlisting>
     </para>
     <para>
      See also <link linkend="fold-setting-advanced">advanced fold
