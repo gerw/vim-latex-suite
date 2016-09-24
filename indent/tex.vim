@@ -376,5 +376,3 @@ function! Tex_CalcIdent()
 	return ind
 endfunction
 " }}}
-
-" vim: set noet:
