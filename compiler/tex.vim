@@ -318,6 +318,12 @@ com! -nargs=? TCLevel :call <SID>SetTexCompilerLevel(<f-args>)
 
 call s:SetLatexEfm()
 
+" Set the errorfile if not already set by somebody else
+if &errorfile ==# ''  ||  &errorfile ==# 'errors.err'
+	execute 'set errorfile=' . fnameescape(Tex_GetMainFileName(':p:r') . '.log')
+endif
+
+
 if !exists('*Tex_Debug')
 	function! Tex_Debug(...)
 	endfunction
