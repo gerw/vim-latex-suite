@@ -125,6 +125,8 @@ def getSectionLabels_Root(lineinfo, section_prefix, label_prefix, value_prefix):
                 prev_txt += n.group(3)
 
             if prev_txt != "" and re.match( value_prefix, prev_txt):
+                # Remove all curly braces in prev_txt:
+                prev_txt = re.sub(r'[{}]', '', prev_txt);
                 # Print label and counter+number:
                 outstr.write('>%s%s\n'   % (indent, label))
                 outstr.write(':%s  %s\n' % (indent, prev_txt))
