@@ -227,22 +227,52 @@ function! <SID>SetLatexEfm()
 	exec 'setlocal efm+=%'.pm.'G%.%#\ (C)\ %.%#'
 	exec 'setlocal efm+=%'.pm.'G(see\ the\ transcript%.%#)'
 	exec 'setlocal efm+=%'.pm.'G\\s%#'
-	exec 'setlocal efm+=%'.pm.'O(%*[^()])%r'
+
+	" Now, we try to trace the used files.
+	"
+	" In principle, the following combinations could arise in the LaTeX logs:
+	"
+	" )* \((%f)\)* (%f
+	" [Close files, skip some files, open a file]
+	"
+	" (%f))*
+	" [Skip some files, close some files]
+	"
+	" After a %[OPQ] is matched, the %r part is passed to the same and
+	" following patterns. Hence, we use the following order of patterns to
+	" match the above situations:
+	" 1. skip patterns
+	" 2. close patterns
+	" 3. skip patterns again
+	" 4. open patterns
+	"
+	" If you use vim to compile your documents, you might want to use
+	"     :let $max_print_line=2000
+	" such that latex will not wrap the filenames. Otherwise, you could use it
+	" as an environment variable or simply use
+	"     max_print_line=2000 pdflatex ...
+	" in your terminal.
+
+	exec 'setlocal efm+=%'.pm.'O\ %#(%f)%r'
+
+	exec 'setlocal efm+=%'.pm.'Q)%r'
+	exec 'setlocal efm+=%'.pm.'Q%*[^()])%r'
+	exec 'setlocal efm+=%'.pm.'Q[%\\d%*[^()])%r'
+
+	exec 'setlocal efm+=%'.pm.'O(%f)%r'
+
+	" This gobbles some entries consisting only of whitespace
+	" See https://github.com/vim/vim/issues/807
+	exec 'setlocal efm+=%'.pm.'O %r'
+
 	exec 'setlocal efm+=%'.pm.'P(%f%r'
 	exec 'setlocal efm+=%'.pm.'P\ %\\=(%f%r'
 	exec 'setlocal efm+=%'.pm.'P%*[^()](%f%r'
 	exec 'setlocal efm+=%'.pm.'P(%f%*[^()]'
 	exec 'setlocal efm+=%'.pm.'P[%\\d%[^()]%#(%f%r'
+
 	if g:Tex_IgnoreUnmatched && !g:Tex_ShowallLines
-		setlocal efm+=%-P%*[^()]
-	endif
-	exec 'setlocal efm+=%'.pm.'Q)%r'
-	exec 'setlocal efm+=%'.pm.'Q%*[^()])%r'
-	exec 'setlocal efm+=%'.pm.'Q[%\\d%*[^()])%r'
-	if g:Tex_IgnoreUnmatched && !g:Tex_ShowallLines
-		setlocal efm+=%-Q%*[^()]
-	endif
-	if g:Tex_IgnoreUnmatched && !g:Tex_ShowallLines
+		" Ignore all lines which are unmatched so far.
 		setlocal efm+=%-G%.%#
 	endif
 
