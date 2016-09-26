@@ -238,13 +238,10 @@ function! <SID>SetLatexEfm()
 	" (%f))*
 	" [Skip some files, close some files]
 	"
+	" And you will find many more awkward combinations...
+	"
 	" After a %[OPQ] is matched, the %r part is passed to the same and
-	" following patterns. Hence, we use the following order of patterns to
-	" match the above situations:
-	" 1. skip patterns
-	" 2. close patterns
-	" 3. skip patterns again
-	" 4. open patterns
+	" following patterns. Hence, we have to add many $[OPQ]-patterns.
 	"
 	" If you use vim to compile your documents, you might want to use
 	"     :let $max_print_line=2000
@@ -253,27 +250,49 @@ function! <SID>SetLatexEfm()
 	"     max_print_line=2000 pdflatex ...
 	" in your terminal.
 
-	exec 'setlocal efm+=%'.pm.'O\ %#(%f)%r'
+	" The first pattern is needed to match lines like
+	" '[10] [11] (some_file.txt)',
+	" where the first number correspond to an output page in the document
+	exec 'setlocal efm+=%'.pm.'O[%*\\d]%r'
 
+	" Some close patters
 	exec 'setlocal efm+=%'.pm.'Q)%r'
-	exec 'setlocal efm+=%'.pm.'Q%*[^()])%r'
 	exec 'setlocal efm+=%'.pm.'Q[%\\d%*[^()])%r'
 
+	" Skip pattern
 	exec 'setlocal efm+=%'.pm.'O(%f)%r'
 
-	" This gobbles some entries consisting only of whitespace
-	" See https://github.com/vim/vim/issues/807
-	exec 'setlocal efm+=%'.pm.'O'
-
+	" Some openings
 	exec 'setlocal efm+=%'.pm.'P(%f%r'
-	exec 'setlocal efm+=%'.pm.'P\ %\\=(%f%r'
 	exec 'setlocal efm+=%'.pm.'P%*[^()](%f%r'
 	exec 'setlocal efm+=%'.pm.'P(%f%*[^()]'
 	exec 'setlocal efm+=%'.pm.'P[%\\d%[^()]%#(%f%r'
 
+
+	" Now, the sledgehammer to cope with awkward endless combinations (did you
+	" ever tried tikz/pgf?)
+	" We have to build up the string first, otherwise we cannot append it with
+	" '+='.
+	let PQO = '%'.pm.'P(%f%r,%'.pm.'Q)%r,%'.pm.'O(%f)%r'
+	let PQOs = PQO
+	for xxx in range(3)
+		let PQOs .= ',' . PQO
+	endfor
+	exec 'setlocal efm+=' . PQOs
+
+	" Finally, there are some lonely page numbers after all the patterns.
+	exec 'setlocal efm+=%'.pm.'O[%*\\d'
+
+	" This gobbles some entries consisting only of whitespace, in fact, it
+	" matches the empty line.
+	" See https://github.com/vim/vim/issues/807
+	exec 'setlocal efm+=%'.pm.'O'
+
 	if g:Tex_IgnoreUnmatched && !g:Tex_ShowallLines
 		" Ignore all lines which are unmatched so far.
 		setlocal efm+=%-G%.%#
+		" Sometimes, there is some garbage after a ')'
+		setlocal efm+=%-O%.%#
 	endif
 
 endfunction 
