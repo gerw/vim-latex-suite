@@ -263,7 +263,7 @@ function! <SID>SetLatexEfm()
 
 	" This gobbles some entries consisting only of whitespace
 	" See https://github.com/vim/vim/issues/807
-	exec 'setlocal efm+=%'.pm.'O %r'
+	exec 'setlocal efm+=%'.pm.'O'
 
 	exec 'setlocal efm+=%'.pm.'P(%f%r'
 	exec 'setlocal efm+=%'.pm.'P\ %\\=(%f%r'
