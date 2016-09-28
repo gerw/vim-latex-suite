@@ -240,6 +240,9 @@ function! <SID>SetLatexEfm()
 	"
 	" And you will find many more awkward combinations...
 	"
+	" Even something like this is possible:
+	" [18] [19] [20] (./bla.bbl [21])
+	"
 	" After a %[OPQ] is matched, the %r part is passed to the same and
 	" following patterns. Hence, we have to add many $[OPQ]-patterns.
 	"
@@ -273,7 +276,7 @@ function! <SID>SetLatexEfm()
 	" ever tried tikz/pgf?)
 	" We have to build up the string first, otherwise we cannot append it with
 	" '+='.
-	let PQO = '%'.pm.'P(%f%r,%'.pm.'Q)%r,%'.pm.'O(%f)%r'
+	let PQO = '%'.pm.'P(%f%r,%'.pm.'Q)%r,%'.pm.'O(%f)%r,%'.pm.'O[%*\\d]%r'
 	let PQOs = PQO
 	for xxx in range(3)
 		let PQOs .= ',' . PQO
