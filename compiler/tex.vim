@@ -176,12 +176,19 @@ endif
 " IgnoreWarnings: parses g:Tex_IgnoredWarnings for message customization {{{
 " Description: 
 function! <SID>IgnoreWarnings()
+	let s:Ignored_Overfull = 0
+
 	let i = 1
 	while s:Strntok(g:Tex_IgnoredWarnings, "\n", i) != '' &&
 				\ i <= g:Tex_IgnoreLevel
 		let warningPat = s:Strntok(g:Tex_IgnoredWarnings, "\n", i)
 		let warningPat = escape(substitute(warningPat, '[\,]', '%\\\\&', 'g'), ' ')
 		exe 'setlocal efm+=%-G%.%#'.warningPat.'%.%#'
+
+		if warningPat =~? 'overfull'
+			let s:Ignored_Overfull = 1
+		endif
+
 		let i = i + 1
 	endwhile
 endfunction 
@@ -208,9 +215,19 @@ function! <SID>SetLatexEfm()
 	setlocal efm+=%E!\ %m
 	setlocal efm+=%E%f:%l:\ %m
 
+	" If we do not ignore 'overfull \hbox' messages, we care for them.
+	if s:Ignored_Overfull == 0
+		setlocal efm+=%+WOverfull\ %mat\ lines\ %l--%*\\d
+		setlocal efm+=%+WOverfull\ %mat\ line\ %l
+	endif
+
+	" Add some generic warnings
 	setlocal efm+=%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#
 	setlocal efm+=%+W%.%#\ at\ lines\ %l--%*\\d
 	setlocal efm+=%+WLaTeX\ %.%#Warning:\ %m
+
+	" 'Overfull \hbox' messages are ended by:
+	exec 'setlocal efm+=%'.pm.'Z\ []'
 
 	exec 'setlocal efm+=%'.pm.'Cl.%l\ %m'
 	exec 'setlocal efm+=%'.pm.'Cl.%l\ '
@@ -227,6 +244,21 @@ function! <SID>SetLatexEfm()
 	exec 'setlocal efm+=%'.pm.'G%.%#\ (C)\ %.%#'
 	exec 'setlocal efm+=%'.pm.'G(see\ the\ transcript%.%#)'
 	exec 'setlocal efm+=%'.pm.'G\\s%#'
+
+	" Empty line ends multi-line messages
+	setlocal efm+=%-Z
+
+	" Only add if 'overfull \hbox' messages are not ignored
+	if s:Ignored_Overfull == 0
+		" After a 'overfull \hbox' message, there is some garbage from the input.
+		" We try to match it, such that parenthesis in this garbage does not
+		" confuse the OPQ-patterns below.
+		" Every line continues a multiline pattern (hopefully a 'overfull \hbox'
+		" message).
+		" Due to a bug(?) in vim, this cannot be used if we ignore the 'overfull
+		" \hbox' messages, see vim/vim#1126.
+		setlocal efm+=%-C%.%#
+	endif
 
 	" Now, we try to trace the used files.
 	"
