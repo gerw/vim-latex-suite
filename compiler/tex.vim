@@ -229,6 +229,12 @@ function! <SID>SetLatexEfm()
 	" 'Overfull \hbox' messages are ended by:
 	exec 'setlocal efm+=%'.pm.'Z\ []'
 
+	" Empty line ends multi-line messages
+	setlocal efm+=%-Z
+
+	exec 'setlocal efm+=%'.pm.'C(%.%#)\ %#%m\ on\ input\ line\ %l.'
+	exec 'setlocal efm+=%'.pm.'C(%.%#)\ %#%m'
+
 	exec 'setlocal efm+=%'.pm.'Cl.%l\ %m'
 	exec 'setlocal efm+=%'.pm.'Cl.%l\ '
 	exec 'setlocal efm+=%'.pm.'C\ \ %m'
@@ -244,9 +250,6 @@ function! <SID>SetLatexEfm()
 	exec 'setlocal efm+=%'.pm.'G%.%#\ (C)\ %.%#'
 	exec 'setlocal efm+=%'.pm.'G(see\ the\ transcript%.%#)'
 	exec 'setlocal efm+=%'.pm.'G\\s%#'
-
-	" Empty line ends multi-line messages
-	setlocal efm+=%-Z
 
 	" Only add if 'overfull \hbox' messages are not ignored
 	if s:Ignored_Overfull == 0
