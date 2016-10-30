@@ -183,10 +183,18 @@ function! <SID>IgnoreWarnings()
 				\ i <= g:Tex_IgnoreLevel
 		let warningPat = s:Strntok(g:Tex_IgnoredWarnings, "\n", i)
 		let warningPat = escape(substitute(warningPat, '[\,]', '%\\\\&', 'g'), ' ')
-		exe 'setlocal efm+=%-G%.%#'.warningPat.'%.%#'
 
 		if warningPat =~? 'overfull'
 			let s:Ignored_Overfull = 1
+			if ( v:version > 800 || v:version == 800 && has("patch26") )
+				" Overfull warnings are ignored as 'warnings'. Therefore, we can gobble
+				" some of the following lines with %-C (see below)
+				exe 'setlocal efm+=%-W%.%#'.warningPat.'%.%#'
+			else
+				exe 'setlocal efm+=%-G%.%#'.warningPat.'%.%#'
+			endif
+		else
+			exe 'setlocal efm+=%-G%.%#'.warningPat.'%.%#'
 		endif
 
 		let i = i + 1
@@ -215,7 +223,8 @@ function! <SID>SetLatexEfm()
 	setlocal efm+=%E!\ %m
 	setlocal efm+=%E%f:%l:\ %m
 
-	" If we do not ignore 'overfull \hbox' messages, we care for them.
+	" If we do not ignore 'overfull \hbox' messages, we care for them to get the
+	" line number.
 	if s:Ignored_Overfull == 0
 		setlocal efm+=%+WOverfull\ %mat\ lines\ %l--%*\\d
 		setlocal efm+=%+WOverfull\ %mat\ line\ %l
@@ -251,16 +260,15 @@ function! <SID>SetLatexEfm()
 	exec 'setlocal efm+=%'.pm.'G(see\ the\ transcript%.%#)'
 	exec 'setlocal efm+=%'.pm.'G\\s%#'
 
-	" Only add if 'overfull \hbox' messages are not ignored
-	if s:Ignored_Overfull == 0
-		" After a 'overfull \hbox' message, there is some garbage from the input.
-		" We try to match it, such that parenthesis in this garbage does not
-		" confuse the OPQ-patterns below.
-		" Every line continues a multiline pattern (hopefully a 'overfull \hbox'
-		" message).
-		" Due to a bug(?) in vim, this cannot be used if we ignore the 'overfull
-		" \hbox' messages, see vim/vim#1126.
-		setlocal efm+=%-C%.%#
+	" After a 'overfull \hbox' message, there is some garbage from the input.
+	" We try to match it, such that parenthesis in this garbage does not
+	" confuse the OPQ-patterns below.
+	" Every line continues a multiline pattern (hopefully a 'overfull \hbox'
+	" message).
+	" Due to a bug in old versions of vim, this cannot be used if we ignore the
+	" 'overfull \hbox' messages, see vim/vim#1126.
+	if s:Ignored_Overfull == 0 || ( v:version > 800 || v:version == 800 && has("patch26") )
+		exec 'setlocal efm+=%'.pm.'C%.%#'
 	endif
 
 	" Now, we try to trace the used files.
