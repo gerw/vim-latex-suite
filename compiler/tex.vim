@@ -302,8 +302,11 @@ function! <SID>SetLatexEfm()
 	exec 'setlocal efm+=%'.pm.'O[%*\\d]%r'
 
 	" Some close patters
-	exec 'setlocal efm+=%'.pm.'Q)%r'
-	exec 'setlocal efm+=%'.pm.'Q[%\\d%*[^()])%r'
+	exec 'setlocal efm+=%'.pm.'Q\ %#)%r'
+	exec 'setlocal efm+=%'.pm.'Q\ %#[%\\d%*[^()])%r'
+	" The next pattern is needed to match lines like
+	" '   ])',
+	exec 'setlocal efm+=%'.pm.'Q\ %#])%r'
 
 	" Skip pattern
 	exec 'setlocal efm+=%'.pm.'O(%f)%r'
