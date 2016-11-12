@@ -234,6 +234,7 @@ function! <SID>SetLatexEfm()
 	setlocal efm+=%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#
 	setlocal efm+=%+W%.%#\ at\ lines\ %l--%*\\d
 	setlocal efm+=%+WLaTeX\ %.%#Warning:\ %m
+	setlocal efm+=%+WPackage\ %.%#Warning:\ %m
 
 	" 'Overfull \hbox' messages are ended by:
 	exec 'setlocal efm+=%'.pm.'Z\ []'
