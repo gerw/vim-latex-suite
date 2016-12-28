@@ -25,8 +25,7 @@ let s:labelprefix_figure = Tex_GetVarValue("Tex_EnvLabelprefix_{'figure'}")
 let s:labelprefix_table = Tex_GetVarValue("Tex_EnvLabelprefix_{'table'}")
 
 " Define environments for IMAP evaluation " {{{
-let s:figure =     "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\psfig{figure=<+eps file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{" . s:labelprefix_figure . "<+label+>}\<cr>\\end{figure}" . s:end_with_cr . "<++>"
-let s:figure_graphicx =    "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\includegraphics{<+file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{" . s:labelprefix_figure . "<+label+>}\<cr>\\end{figure}" . s:end_with_cr . "<++>"
+let s:figure =     "\\begin{figure}[<+htpb+>]\<cr>\\centering\<cr>\\includegraphics{<+file+>}\<cr>\\caption{<+caption text+>}\<cr>\\label{" . s:labelprefix_figure . "<+label+>}\<cr>\\end{figure}" . s:end_with_cr . "<++>"
 let s:minipage =   "\\begin{minipage}[<+tb+>]{<+width+>}\<cr><++>\<cr>\\end{minipage}" . s:end_with_cr . "<++>"
 let s:picture =    "\\begin{picture}(<+width+>, <+height+>)(<+xoff+>,<+yoff+>)\<cr>\\put(<+xoff+>,<+yoff+>){\\framebox(<++>,<++>){<++>}}\<cr>\\end{picture}" . s:end_with_cr . "<++>"
 let s:list =       "\\begin{list}{<+label+>}{<+spacing+>}\<cr>\\item <++>\<cr>\\end{list}" . s:end_with_cr . "<++>"
@@ -40,7 +39,7 @@ let s:tabular_star = "\\begin{tabular*}[<+hbtp+>]{<+format+>}\<cr><++>\<cr>\\end
 " }}}
 " define environments with special behavior in line wise selection. {{{
 if !exists('s:vis_center_left')
-	let s:vis_center_left = '\centerline{'
+	let s:vis_center_left = '{\centering '
 	let s:vis_center_right = '}'
 
 	let s:vis_verbatim_left = '\verb\|'
@@ -233,8 +232,6 @@ call s:Tex_EnvMacros('EAS', '&Math.', 'align*')
 call s:Tex_EnvMacros('EAD', '&Math.', 'aligned')
 call s:Tex_EnvMacros('EAR', '&Math.', 'array')
 call s:Tex_EnvMacros('EDM', '&Math.', 'displaymath')
-call s:Tex_EnvMacros('EEA', '&Math.', 'eqnarray')
-call s:Tex_EnvMacros('',    '&Math.', 'eqnarray*')
 call s:Tex_EnvMacros('EEQ', '&Math.', 'equation')
 call s:Tex_EnvMacros('EES', '&Math.', 'equation*')
 call s:Tex_EnvMacros('EMA', '&Math.', 'math')
@@ -348,11 +345,7 @@ function! Tex_figure(env)
 		let figure = figure . '\end{'.a:env.'}' . s:end_with_cr
 		return IMAP_PutTextWithMovement(figure)
 	else
-		if g:Tex_package_detected =~ '\<graphicx\>'
-			return IMAP_PutTextWithMovement(s:figure_graphicx)
-		else
-			return IMAP_PutTextWithMovement(s:figure)
-		endif
+		return IMAP_PutTextWithMovement(s:figure)
 	endif
 endfunction
 " }}} 
@@ -414,8 +407,8 @@ function! Tex_tabular(env)
 	endif
 endfunction
 " }}} 
-" Tex_eqnarray: {{{
-function! Tex_eqnarray(env)
+" Tex_standard_env: Provides a 'standard environment' including a label {{{
+function! Tex_standard_env(env)
 	if g:Tex_UseMenuWizard == 1
 		if a:env !~ '\*'
 			let label = input('Label?  ')
@@ -568,8 +561,6 @@ function! Tex_PutEnvironment(env)
 		let s:isvisual = 'no'
 		if a:env == '\['
 			return VEnclose('', '', '\[', '\]')
-		elseif a:env == '$$'
-			return VEnclose('', '', '$$', '$$')
 		endif
 		return VEnclose('\begin{'.a:env.'}', '\end{'.a:env.'}', '\begin{'.a:env.'}', '\end{'.a:env.'}')
 	else
@@ -581,9 +572,9 @@ function! Tex_PutEnvironment(env)
 			return IMAP_PutTextWithMovement(b:Tex_Env_{a:env})
 		elseif exists("g:Tex_Env_{'".a:env."'}")
 			return IMAP_PutTextWithMovement(g:Tex_Env_{a:env})
-		elseif a:env =~ 'theorem\|definition\|lemma\|proposition\|corollary\|assumption\|remark\|equation\|eqnarray\|align\*\|align\>\|multline'
+		elseif a:env =~ 'theorem\|definition\|lemma\|proposition\|corollary\|assumption\|remark\|equation\|align\*\|align\>\|multline'
 			let g:aa = a:env
-			return Tex_eqnarray(a:env)
+			return Tex_standard_env(a:env)
 		elseif a:env =~ "enumerate\\|itemize\\|theindex\\|trivlist"
 			return Tex_itemize(a:env)
 		elseif a:env =~ "table\\|table*"
@@ -592,8 +583,6 @@ function! Tex_PutEnvironment(env)
 			return Tex_tabular(a:env)
 		elseif exists('*Tex_'.a:env)
 			exe 'return Tex_'.a:env.'(a:env)'
-		elseif a:env == '$$'
-			return IMAP_PutTextWithMovement('$$<++>$$')
 		elseif a:env == '\['
 			return IMAP_PutTextWithMovement("\\[\<CR><++>\<CR>\\]" . s:end_with_cr . "<++>")
 		else
@@ -631,8 +620,6 @@ endfunction " }}}
 "
 " Leaving this empty is equivalent to disabling the feature.
 if g:Tex_PromptedEnvironments != ''
-
-	let b:DoubleDollars = 0
 
 	" Provide only <plug>s here. main.vim will create the actual maps.
 	inoremap <silent> <Plug>Tex_FastEnvironmentInsert  <C-r>=Tex_FastEnvironmentInsert("no")<cr>
@@ -748,12 +735,10 @@ if g:Tex_PromptedEnvironments != ''
 		exe 'echomsg "You are within a '.env_name.' environment."'
 		let change_env = PromptForEnvironment('What do you want to change it to? ')
 
-		if change_env == 'eqnarray'
-			call <SID>Change('eqnarray', 1, '', env_name =~ '\*$')
+		if change_env == 'equation'
+			call <SID>Change('equation', 1, '&\|\\\\', env_name =~ '\*$')
 		elseif change_env == 'align'
 			call <SID>Change('align', 1, '', env_name =~ '\*$')
-		elseif change_env == 'eqnarray*'
-			call <SID>Change('eqnarray*', 0, '\\nonumber', 0)
 		elseif change_env == 'align*'
 			call <SID>Change('align*', 0, '\\nonumber', 0)
 		elseif change_env == 'equation*'
@@ -778,7 +763,7 @@ if g:Tex_PromptedEnvironments != ''
 	"   label : if 1, then insert a \label at the end of the environment.
 	"           otherwise, delete any \label line found.
 	"   delete : a pattern which is to be deleted from the original environment.
-	"            for example, going to a eqnarray* environment means we need to
+	"            for example, going to a equation* environment means we need to
 	"            delete \label's.
 	"   putInNonumber : whether we need to put a \nonumber before the end of the
 	"                 environment.
@@ -788,29 +773,18 @@ if g:Tex_PromptedEnvironments != ''
 		let start_col = virtcol('.')
 
 		if index(['[', '\[', '$$'], a:env) != -1
-			if b:DoubleDollars == 0
-				let first = '\['
-				let second = '\]'
-			else
-				let first = '$$'
-				let second = '$$'
-			endif
+			let first = '\['
+			let second = '\]'
 		else
 			let first = '\begin{' . a:env . '}'
 			let second = '\end{' . a:env . '}'
 		endif
 
-		if b:DoubleDollars == 0
-			let bottom = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','')
-			s/\\\]\|\\end{.\{-}}/\=second/
-			let top = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','b')
-			s/\\\[\|\\begin{.\{-}}/\=first/
-		else
-			let bottom = search('\$\$\|\\end{')
-			s/\$\$\|\\end{.\{-}}/\=second/
-			let top = search('\$\$\|\\begin{','b')
-			s/\$\$\|\\begin{.\{-}}/\=first/
-		end
+		let bottom = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','')
+		s/\\\]\|\\end{.\{-}}/\=second/
+		let top = searchpair('\\\[\|\\begin{','','\\\]\|\\end{','b')
+		s/\\\[\|\\begin{.\{-}}/\=first/
+
 		if a:delete != ''
 			exe 'silent '. top . "," . bottom . 's/' . a:delete . '//e'
 		endif
@@ -973,7 +947,9 @@ inoremap <script> <silent> <Plug>Tex_InsertItemOnThisLine <C-r>=Tex_InsertItem()
 inoremap <script> <silent> <Plug>Tex_InsertItemOnNextLine <ESC>o<C-R>=Tex_InsertItem()<CR>
 
 function! Tex_SetItemMaps()
-	if !hasmapto("<Plug>Tex_InsertItemOnThisLine", "i")
+	" Only include the <M-i> mapping if the user want this. Note that it
+	" conflicts with inserting 'é'.
+	if !hasmapto("<Plug>Tex_InsertItemOnThisLine", "i") && g:Tex_AdvancedMath == 1
 		imap <buffer> <M-i> <Plug>Tex_InsertItemOnThisLine
 	endif
 	if !hasmapto("<Plug>Tex_InsertItemOnNextLine", "i")
@@ -1080,8 +1056,6 @@ endfunction " }}}
 "
 " Leaving this empty is equivalent to disabling the feature.
 if g:Tex_PromptedCommands != ''
-
-	let b:DoubleDollars = 0
 
 	inoremap <silent> <Plug>Tex_FastCommandInsert  <C-r>=Tex_DoCommand('no')<cr>
 	nnoremap <silent> <Plug>Tex_FastCommandInsert  i<C-r>=Tex_DoCommand('no')<cr>

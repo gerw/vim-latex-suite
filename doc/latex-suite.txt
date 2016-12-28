@@ -141,6 +141,12 @@ file:  >
     
 
 
+In the unlikely case that Latex-Suite is installed, but you do not want to use
+it (e.g., if it is installed system-wide and you use some other package to deal
+with tex files), you can suppress the loading of Latex-Suite by setting  >
+    let b:suppress_latex_suite = 1
+in your ~/.vim/ftplugin/tex.vim.
+
 ================================================================================
 Inserting Templates                                             *ls_2* *ls_a_bd*
                                                          *latex-suite-templates*
@@ -210,17 +216,18 @@ NOTE: Place Holders
       place-holders. This consists of using "place-holders" to mark off
       locations where the next relevant editing has to be done. As an example,
       when you type EFI in |insert-mode|, you will get the following:  >
-          \begin{figure}[h]
-              \centerline{\psfig{figure=<+eps file+>}}
+          \begin{figure}[<+htpb+>]
+              \centering
+              \includegraphics{<+file+>}
               \caption{<+caption text+>}
               \label{fig:<+label+>}
           \end{figure}<++>
-<     The text <+eps file+> will be selected and you will be left in
-      |select-mode| so that you can continue typing straight away. After having
-      typed in the file name, you can press <Ctrl-J> (while still in
-      insert-mode). This will take you directly to the next "place-holder". i.e,
-      <+caption text+> will be visually selected with Vim in select mode again
-      for typing in the caption. This saves on a lot of key presses.
+<     The text <+htpb+> will be selected and you will be left in |select-mode|
+      so that you can continue typing straight away. After having typed in the
+      placement specifier, you can press <Ctrl-J> (while still in insert-mode).
+      This will take you directly to the next "place-holder". i.e, <+file+> will
+      be visually selected with Vim in select mode again for typing in the file
+      name. This saves on a lot of key presses.
       
       
                                                    *overriding-macros* *ls_a_eM*
@@ -319,7 +326,7 @@ following rules:
    words. Example:  >
        flushleft  (_f_lush + _l_eft)  ---> EFL
        flushright (_f_lush + _r_ight) ---> EFR
-       eqnarray   (_e_qn + _a_rray)   ---> EEA
+       minipage   (_m_ini  + _p_age)  ---> EMP
 <  If on the other hand, the environment name cannot be broken up into 2
    distinct words, then the next 2 letters are the first 2 letters of the name
    of the environment. Example:  >
@@ -369,7 +376,7 @@ and press ,ce. The rule simply says that the leading E is converted to , and the
 next 2 letters are small case.
 Some of the visual mode mappings are sensitive to whether you choose line-wise
 or character-wise. For example, if you choose a word and press ,ce, then you get
-\centerline{word}, whereas if you press ,ce on a line-wise selection, you get:  >
+{\centering word}, whereas if you press ,ce on a line-wise selection, you get:  >
     \begin{center}
         line
     \end{center}
@@ -382,17 +389,17 @@ Changing Environments                                       *ls_3_1_3* *ls_a_bn*
 Pressing <S-F5> in normal mode detects which environment the cursor is presently
 located in and prompts you to replace it with a new one. The innermost
 environment is detected. For example, in the following source:  >
-    \begin{eqnarray}
+    \begin{equation}
       \begin{array}{ccc}
         2 & 3 & 4
       \end{array}
-    \end{eqnarray}
+    \end{equation}
 if you are located in the middle "2 & 3 & 4" line, then pressing <S-F5> will
-prompt you to change the array environment, not the eqnarray environment. In
+prompt you to change the array environment, not the equation environment. In
 addition, Latex-Suite will also try to change lines within the environment to be
 consistent with the new environment. For example, if the original environment
-was an eqnarray environment with a \label command, then changing it to an
-eqnarray* environment will delete the \label.
+was an equation environment with a \label command, then changing it to an
+equation* environment will delete the \label.
 
 Pressing <F5> in normal mode has the same effect as pressing <F5> in
 insert-mode, namely you will be prompted to choose an environment to insert.
@@ -714,6 +721,9 @@ Pressing <BS> in insert mode checks to see whether we are just after something
 like \'{a} and if so, deletes all of it. i.e, diacritics are treated as single
 characters for backspacing.
 
+You might want to disable this feature, if you are editing Chinese, Japanese or
+Korean text.
+
 Smart Quotes
 ------------
 Pressing " (English double quote) will insert `` or '' by making an intelligent
@@ -739,6 +749,13 @@ Latex-Suite utilizes a set of macros originally created by Carl Mueller in
 auctex.vim to make inserting all the \left ... \right stuff very easy and to
 also make some use of the heavily under-utilized <Alt> key.
 
+NOTE: By default, the mappings involving the <Alt> key are turned off for
+      compatibility with inserting non-ASCII characters. It can be enabled by
+      setting  >
+          let g:Tex_AdvancedMath = 1
+<     in your $VIM/ftplugin/tex.vim.
+      
+      
 NOTE: By default, typing Alt-<key> in Vim takes focus to the menu bar if a menu
       with the hotkey <key> exists. If in your case, there are conflicts due to
       this behavior, you will need to set  >
@@ -880,6 +897,10 @@ globally visible maps, you will need to use the following in either your
         au!
         au VimEnter * call IMAP('Foo', 'foo', '')
     augroup END
+
+
+IMAP mappings can be removed by IUNMAP, e.g.,  >
+    call IUNMAP('FEM','tex')
 
 
 
@@ -1267,7 +1288,7 @@ placed after eqn:, press <F9>. This will bring up two new windows beneath the
 main window you were working in as shown in the figure below.  >
     
           8 These are a couple of equations:
-          9 +--  4 lines: eqnarray (eqn:euler) :   e^{j\pi} + 1 &=& 0---------------
+          9 +--  4 lines: equation (eqn:euler) :   e^{j\pi} + 1 = 0-----------------
          13 +--  4 lines: equation (eqn:einstein) :   E = m c^2---------------------
          17
          18 These are a couple of figures:
@@ -1289,10 +1310,10 @@ main window you were working in as shown in the figure below.  >
     [Error List]                                                  1,1            All
           7
           8 These are a couple of equations:
-          9 \begin{eqnarray}
-         10   e^{j\pi} + 1 &=& 0
+          9 \begin{equation}
+         10   e^{j\pi} + 1 = 0
          11   \label{eqn:euler}
-         12 \end{eqnarray}
+         12 \end{equation}
          13 \begin{equation}
          14   E = m c^2
          15   \label{eqn:einstein}
@@ -1352,7 +1373,7 @@ equations. You can then open some of the folds to see for example:  >
                    eqn:wingnormal-pos
                      \nhat =  T_z(\theta_2) T_y(\theta_y)T_x(\theta_x)\nhat_0,
                    eqn:T-1
-                     T_1(\theta_2) &=& T_z(\theta_2)
+                     T_1(\theta_2) &= T_z(\theta_2)
         
 The <Tab> key is mapped in this window to toggle folds so that you can quickly
 open/close folds in order to navigate the heirarchy faster. Once you are
@@ -1507,11 +1528,11 @@ As of now, Latex-Suite recognizes the following commands for filename
 completion. Along with the commands, this table also lists the files which
 Latex-Suite will not show for completing each command.
 
-command                    hide pattern~
-\bibliography              '^\.,\.[^b]..$'
-\include \includeonly      '^\.,\.[^t]..$'
-\includegraphics \psfig    '^\.,\.tex$,\.bib$,\.bbl$,\.zip$,\.gz$'
-\input                     ''
+command                  hide pattern~
+\bibliography            '^\.,\.[^b]..$'
+\include \includeonly    '^\.,\.[^t]..$'
+\includegraphics         '^\.,\.tex$,\.bib$,\.bbl$,\.zip$,\.gz$'
+\input                   ''
 
 --------------------------------------------------------------------------------
 Custom command completion                                     *ls_5_5* *ls_a_bX*
@@ -1899,20 +1920,21 @@ is found in the folded region, then those are used to make a more meaningful
 fold-text, otherwise the second line of the environment is displayed along with
 the name of the environment. In other words, the following  >
     \begin{figure}[h]
-        \centerline{\psfig{figure=slidercrank.eps,height=6cm}}
+         \centering
+         \includegraphics[height=6cm]{slidercrank.pdf}
         \caption{The Slider Crank Mechanism.}
         \label{fig:slidercrank}
     \end{figure}
     % a LaTeX comment.
-    \begin{eqnarray}
+    \begin{equation}
         \sin(\pi) = 0
-    \end{eqnarray}
+    \end{equation}
 
 
 will be shown as:  >
     +---  5 lines: figure (fig:slidercrank) : The Slider Crank Mechanism. -----
     % a LaTeX comment.
-    +---  3 lines: eqnarray () : \sin(\pi) = 0 --------------------------------
+    +---  3 lines: equation () : \sin(\pi) = 0 --------------------------------
 
 
 
@@ -1938,7 +1960,7 @@ By default, Latex-Suite creates folds in the following manner:
                         %%fakeparagraph
                             \item
                                 \equation
-                                \eqnarray
+                                \align
                                 \figure
                                 \table
                                 \footnote
@@ -1993,9 +2015,9 @@ is  >
     keywords,abstract,titlepage
 The words need not be standard Latex environments. You can add any word you
 like. Also, each word will fold up all environments whose name begins with that
-word. For example, in the setting above, the word "eq" folds up the
-\begin{equation}, \begin{eqnarray}, \begin{eqnarray*} environments. To avoid
-this, you can replace the word "eq" with "eq}".
+word. For example, in the setting above, the word "align" folds up the
+\begin{align}, \begin{align*}, \begin{aligned} environments. To avoid this, you
+can replace the word "align" with "align}".
 
 See also advanced fold settings [|ls_a_cp|].
 
@@ -2746,13 +2768,13 @@ You could even use strings returned by functions as the expansion by using the
 IMAP_PutTextWithMovement() [|ls_a_ei|] function.
 
 If the name of the environment contains special characters (for example, the
-eqnarray* environment), then use the following form:  >
-    let g:Tex_Env_{'eqnarray*'} = 
-             \ "\\begin{eqnarray*}\<CR><++> &=& <++>\<CR>\\end{eqnarray*}<++>"
-This will make pressing <F5> after eqnarray* expand to  >
-    \begin{eqnarray*}
-         <++> &=& <++>
-     \end{eqnarray*}<++>
+align* environment), then use the following form:  >
+    let g:Tex_Env_{'align*'} =
+             \ "\\begin{align*}\<CR><++> &= <++>\<CR>\\end{align*}<++>"
+This will make pressing <F5> after align* expand to  >
+    \begin{align*}
+         <++> &= <++>
+     \end{align*}<++>
 
 
 
@@ -2771,8 +2793,7 @@ the prefix eq: is inserted in all labels in generated equations:  >
           \label{eq:<++>}
     \end{equation}<++>
 This setting works for the environments figure, table, theorem, definition,
-lemma, proposition, corollary, assumption, remark, equation, eqnarray, align and
-multline.
+lemma, proposition, corollary, assumption, remark, equation, align and multline.
 
 
 Tex_EnvEndWithCR                                         *ls_11_3_1_3* *ls_a_dd*
@@ -2829,7 +2850,7 @@ g:Tex_PromptedEnvironments                               *ls_11_3_1_6* *ls_a_dg*
 
 
 Type             String
-Default Value    'eqnarray*,eqnarray,equation,equation*,\[,$$,align,align*'
+Default Value    'equation,equation*,align,align*,enumerate,itemize,figure,table'
 
 This string represents a comma separated list of fields corresponding to
 environments. Pressing <F5> in insert-mode in the body of the document asks you
@@ -2843,11 +2864,11 @@ g:Tex_HotKeyMappings                                     *ls_11_3_1_7* *ls_a_dh*
 
 
 Type             String
-Default Value    'eqnarray*,eqnarray,bmatrix'
+Default Value    'equation*,equation,bmatrix'
 
 This string represents a comma separated list of environments which are mapped
 to <Shift-F-1> through <Shift-F-4>. For example, pressing <Shift-F-2> with this
-setting inserts the eqnarray environment.
+setting inserts the equation environment.
 
 Leaving this string empty will leave <Shift-F-1> through <Shift-F-4> unmapped.
 

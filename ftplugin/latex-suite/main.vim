@@ -52,8 +52,8 @@ if !exists('s:doneMappings')
 	call IMAP ('{}', '{<++>}<++>', "tex")
 	call IMAP ('^^', '^{<++>}<++>', "tex")
 	call IMAP ('$$', '$<++>$<++>', "tex")
-	call IMAP ('==', '&=& ', "tex")
-	call IMAP ('~~', '&\approx& ', "tex")
+	call IMAP ('==', '&= ', "tex")
+	call IMAP ('~~', '&\approx ', "tex")
 	call IMAP ('=~', '\approx', "tex")
 	call IMAP ('::', '\dots', "tex")
 	call IMAP ('((', '\left( <++> \right)<++>', "tex")
@@ -127,7 +127,7 @@ if !exists('s:doneMappings')
 	call IMAP(g:Tex_Leader.'U', '\Upsilon', 'tex')
 	call IMAP(g:Tex_Leader.'W', '\Omega', 'tex')
 	" }}}
-	" ProtectLetters: sets up indentity maps for things like ``a {{{
+	" ProtectLetters: sets up identity maps for things like ``a {{{
 	" " Description: If we simply do
 	" 		call IMAP('`a', '\alpha', 'tex')
 	" then we will never be able to type 'a' after a tex-quotation. Since
@@ -853,10 +853,9 @@ exe 'source '.fnameescape(s:path.'/custommacros.vim')
 exe 'source '.fnameescape(s:path.'/bibtex.vim')
 
 " source advanced math functions
-if g:Tex_AdvancedMath == 1
-	exe 'source '.fnameescape(s:path.'/brackets.vim')
-	exe 'source '.fnameescape(s:path.'/smartspace.vim')
-endif
+exe 'source '.fnameescape(s:path.'/brackets.vim')
+
+exe 'source '.fnameescape(s:path.'/smartspace.vim')
 
 if g:Tex_Diacritics != 0
 	exe 'source '.fnameescape(s:path.'/diacritics.vim')
