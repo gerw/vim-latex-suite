@@ -291,11 +291,14 @@ function! <SID>SetLatexEfm()
 	" following patterns. Hence, we have to add many $[OPQ]-patterns.
 	"
 	" If you use vim to compile your documents, you might want to use
-	"     :let $max_print_line=2000
+	"     :let $max_print_line=1024
 	" such that latex will not wrap the filenames. Otherwise, you could use it
 	" as an environment variable or simply use
-	"     max_print_line=2000 pdflatex ...
-	" in your terminal.
+	"     max_print_line=1024 pdflatex ...
+	" in your terminal. If you are using latexmk, you should set
+	"     $ENV{'max_print_line'} = '1024';
+	"     $log_wrap = $ENV{'max_print_line'};
+	" in your ~/.latexmkrc
 
 	" The first pattern is needed to match lines like
 	" '[10] [11] (some_file.txt)',
