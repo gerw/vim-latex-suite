@@ -433,11 +433,13 @@ function! s:Tex_CompleteRefCiteCustom(type)
 
 	let prefixlength=strlen(s:prefix)
 	if a:type =~ 'cite'
-		if getline('.') =~ '\\bibitem\s*{'
-			let bibkey = matchstr(getline('.'), '\\bibitem\s*{\zs.\{-}\ze}')
-		else
-			let bibkey = matchstr(getline('.'), '\\bibitem\s*\[.\{-}\]\s*{\zs.\{-}\ze}')
+		" Look for a '\bibitem'
+		let bibkey = matchstr(getline('.'), '\\bibitem\s*\%(\[.\{-}\]\)\?\s*{\zs.\{-}\ze}')
+		if bibkey == ""
+			" Look for a '@article{bibkey,'
+			let bibkey = matchstr(getline('.'), '@\w*{\zs\w*\ze,')
 		endif
+
 		let completeword = bibkey
 
 	elseif a:type =~ 'ref'
@@ -583,7 +585,7 @@ function! Tex_GrepHelper(prefix, what)
 endfunction " }}}
 " Tex_ScanFileForCite: search for \bibitem's in .bib or .bbl or tex files {{{
 " Description: 
-" Search for bibliographic entries in the
+" Search for bibliographic entries in the presently edited file in the
 " following manner:
 " 1. First see if the file has a \bibliography command.
 "    If YES:
@@ -600,7 +602,7 @@ endfunction " }}}
 " as soon as the first \bibliography or \begin{thebibliography} is found.
 function! Tex_ScanFileForCite(prefix)
 	call Tex_Debug('+Tex_ScanFileForCite: searching for bibkeys.', 'view')
-	let bibfiles = Tex_FindBibFiles()
+	let bibfiles = Tex_FindBibFiles( 1 )
 
 	if bibfiles =~ '\S'
 		let i = 1
@@ -877,41 +879,54 @@ endfunction " }}}
 " ==============================================================================
 " Functions for presenting a nicer list of bibtex entries
 " ============================================================================== 
-" Tex_FindBibFiles: finds all .bib files used by the main file {{{
+" Tex_FindBibFiles: finds all .bib files used by the current or main file {{{
 " Description: 
-function! Tex_FindBibFiles()
+"   a:currfile : if this flag is set, we look in the currently edited file;
+"                otherwise, we load the main file
+function! Tex_FindBibFiles( currfile )
 	call Tex_Debug(":Tex_FindBibFiles: ", "view")
 
-	let mainfname = Tex_GetMainFileName(':p')
-	split
-	exec 'silent! e '.fnameescape(mainfname)
+	if !a:currfile
+		let mainfname = Tex_GetMainFileName(':p')
+		split
+		exec 'silent! e '.fnameescape(mainfname)
+	endif
 
-	let line_start = search('\%(\\\@<!\%(\\\\\)*%.*\)\@<!\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){', 'w')
-	if line_start > 0
+	" No bibfiles found yet
+	let bibfiles = ''
+
+	" Position the cursor at the start of the file
+	call setpos('.', [0,1,1,0])
+
+	while 1
+		let line_start = search('\%(\\\@<!\%(\\\\\)*%.*\)\@<!\\\%(\%(no\)\?bibliography\|addbibresource\%(\[.*\]\)\?\)\zs{', 'W')
+		if line_start == 0
+			break
+		endif
 
 		call Tex_Debug('Tex_FindBibFiles: found bibliography command in '.bufname('%'), 'view')
 
 		" extract the bibliography filenames from the command.
 		" First, look for the closing brace
-		let line_end = search('\%(\\\@<!\%(\\\\\)*%.*\)\@<!}', 'Wc')
+		let line_end = search('\%(\\\@<!\%(\\\\\)*%.*\)\@<!}', 'nWc')
 
 		call Tex_Debug(":Tex_FindBibFiles: bib command from line " . line_start . " to line " . line_end, "view")
 
 		" Now, extract all these lines
-		let lines = ''
-		for line_nr in range(line_start, line_end)
+		" In the first line, start at the bib-command (current column)
+		let lines = strpart(getline(line_start), getpos('.')[2])
+		for line_nr in range(line_start+1, line_end)
 			" Strip comments and concatenate
 			let lines .= substitute(getline(line_nr), '\\\@<!\%(\\\\\)*\zs%.*$','','')
 		endfor
 		call Tex_Debug(":Tex_FindBibFiles: concatenated bib command: \"" . lines . "\"", "view")
 
 		" Finally, extract the file names
-		let bibnames = matchstr(lines, '\\\(\(no\)\?bibliography\|addbibresource\(\[.*\]\)\?\){\zs.\{-}\ze}')
+		let bibnames = matchstr(lines, '^\zs.\{-}\ze}')
 		let bibnames = substitute(bibnames, '\s', '', 'g')
 
 		call Tex_Debug(':Tex_FindBibFiles: trying to search through ['.bibnames.']', 'view')
 
-		let bibfiles = ''
 		let i = 1
 		while 1
 			let bibname = Tex_Strntok(bibnames, ',', i)
@@ -925,14 +940,19 @@ function! Tex_FindBibFiles()
 			let i = i + 1
 		endwhile
 
-		call Tex_Debug(":Tex_FindBibFiles: returning [".bibfiles."]", "view")
-		q
-		return bibfiles
+		if getline('.') =~# '\%(\\\@<!\%(\\\\\)*%.*\)\@<!\\\%(no\)\?bibliography{'
+			" Only one \[no]bibliography allowed by LaTeX
+			break
+		endif
+	endwhile
 
-	else
+	call Tex_Debug(":Tex_FindBibFiles: returning [".bibfiles."]", "view")
+
+	if !a:currfile
 		q
-		return ''
 	endif
+
+	return bibfiles
 
 endfunction " }}}
 " Tex_StartBibtexOutline: sets up an outline window {{{
@@ -946,7 +966,7 @@ if g:Tex_HasPython
 endif
 
 function! Tex_StartCiteCompletion()
-	let bibfiles = Tex_FindBibFiles()
+	let bibfiles = Tex_FindBibFiles( 0 )
 	if bibfiles !~ '\S'
 		call Tex_SwitchToInsertMode()
 		echohl WarningMsg

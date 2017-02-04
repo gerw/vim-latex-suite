@@ -428,6 +428,7 @@ function! Tex_ForwardSearchLaTeX()
 
 		elseif (viewer == "synctex_wrapper" )
 			" Unix + synctex_wrapper
+			" You can add a custom script named 'synctex_wrapper' in your $PATH
 			" syntax is: synctex_wrapper TARGET_FILE LINE_NUMBER COLUMN_NUMBER SOURCE_FILE
 			let execString .= Tex_Stringformat('synctex_wrapper %s %s %s %s', target_file, linenr, col('.'), sourcefile)
 		else

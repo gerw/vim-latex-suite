@@ -201,7 +201,7 @@ function! Tex_pack_updateall(force)
 			call Tex_Debug(':Tex_pack_updateall: found "'. package_file .'"', 'pack')
 			exec 'view ' . package_file
 		else
-			call Tex_Debug(':Tex_pack_updateall: did not found "'. fnameescape(packname) .'.sty' .'" in "' . &path . '"', 'pack')
+			call Tex_Debug(':Tex_pack_updateall: did not find "'. fnameescape(packname) .'.sty' .'" in "' . &path . '"', 'pack')
 		end
 		call Tex_Debug(':Tex_pack_updateall: present file = '.bufname('%'), 'pack')
 
@@ -232,10 +232,7 @@ function! Tex_pack_updateall(force)
 		" Do not use bwipe, but that leads to excessive buffer number
 		" consumption. Besides, its intuitive for a custom package to remain
 		" on the buffer list.
-		" q
-
-		" Kick the custom package out from the buffer list.
-		bwipe
+		q
 
 		let i = i + 1
 		let packname = Tex_Strntok(g:Tex_package_detected, ',', i)
