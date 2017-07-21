@@ -34,7 +34,7 @@ def getFileContents(fname):
         return ''
 
     # TODO what are all the ways in which a tex file can include another?
-    pat = re.compile(r'^\\(@?)(include|input){(.*?)}', re.M)
+    pat = re.compile(r'^\s*\\(@?)(include|input){(.*?)}', re.M)
     contents = re.sub(pat, getFileContents, contents)
 
     return ('%%==== FILENAME: %s' % fname) + '\n' + contents
@@ -97,7 +97,7 @@ def getSectionLabels_Root(lineinfo, section_prefix, label_prefix):
             # for the figure environment however, just display the caption.
             # instead of everything since the \begin command.
             if prev_env == 'figure':
-                cm = re.search(r'\caption(\[.*?\]\s*)?{(.*?)}', prev_txt)
+                cm = re.search(r'\\caption(\[.*?\]\s*)?{(.*?)}', prev_txt)
                 if cm:
                     prev_txt = cm.group(2)
 
