@@ -162,10 +162,10 @@ if !exists('s:doneMappings')
 	" result in the region being enclosed in \begin{verbatim}, \end{verbatim},
 	" whereas in characterise visual mode, the thingie is enclosed in \verb|
 	" and |.
-	exec 'vnoremap <silent> '.g:Tex_Leader."( \<C-\\>\<C-N>:call VEnclose('\\left( ', ' \\right)', '\\left(', '\\right)')\<CR>"
-	exec 'vnoremap <silent> '.g:Tex_Leader."[ \<C-\\>\<C-N>:call VEnclose('\\left[ ', ' \\right]', '\\left[', '\\right]')\<CR>"
-	exec 'vnoremap <silent> '.g:Tex_Leader."{ \<C-\\>\<C-N>:call VEnclose('\\left\\{ ', ' \\right\\}', '\\left\\{', '\\right\\}')\<CR>"
-	exec 'vnoremap <silent> '.g:Tex_Leader."$ \<C-\\>\<C-N>:call VEnclose('$', '$', '\\[', '\\]')\<CR>"
+	exec 'xnoremap <silent> '.g:Tex_Leader."( \<C-\\>\<C-N>:call VEnclose('\\left( ', ' \\right)', '\\left(', '\\right)')\<CR>"
+	exec 'xnoremap <silent> '.g:Tex_Leader."[ \<C-\\>\<C-N>:call VEnclose('\\left[ ', ' \\right]', '\\left[', '\\right]')\<CR>"
+	exec 'xnoremap <silent> '.g:Tex_Leader."{ \<C-\\>\<C-N>:call VEnclose('\\left\\{ ', ' \\right\\}', '\\left\\{', '\\right\\}')\<CR>"
+	exec 'xnoremap <silent> '.g:Tex_Leader."$ \<C-\\>\<C-N>:call VEnclose('$', '$', '\\[', '\\]')\<CR>"
 	" }}}
 end
 
@@ -401,7 +401,7 @@ function! Tex_GetMainFileName(...)
 	" move up the directory tree until we find a .latexmain file.
 	" TODO: Should we be doing this recursion by default, or should there be a
 	"       setting?
-	while glob('*.latexmain') == ''
+	while glob('*.latexmain',v:true) == ''
 		let dirmodifier = dirmodifier.':h'
 		let dirNew = fnameescape(expand(dirmodifier))
 		" break from the loop if we cannot go up any further.
@@ -412,7 +412,7 @@ function! Tex_GetMainFileName(...)
 		exe 'cd '.dirLast
 	endwhile
 
-	let lheadfile = glob('*.latexmain')
+	let lheadfile = glob('*.latexmain',v:true)
 	if lheadfile != ''
 		" Remove the trailing .latexmain part of the filename... We never want
 		" that.
