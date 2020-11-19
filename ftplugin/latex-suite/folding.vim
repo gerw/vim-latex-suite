@@ -471,10 +471,10 @@ endfunction
 " optional argument.
 function! ParseSectionTitle(foldstart, idx)
 	let currlinenr = a:foldstart
-	let currline = s:StripLine(getline(currlinenr))
+	let currline = s:StripLine(getline(currlinenr)[ a:idx : -1 ])
 	let currlinelen = strlen(currline)
 
-	let index = a:idx
+	let index = 0
 
 	let maxlines = 10
 
