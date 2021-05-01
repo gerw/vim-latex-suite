@@ -26,7 +26,13 @@ function! Tex_SetTeXCompilerTarget(type, target)
 
 	let targetRule = Tex_GetVarValue('Tex_'.a:type.'Rule_'.target)
 
-	if targetRule != ''
+	if a:type == "Compile" && Tex_GetVarValue('Tex_UseMakefile') && (glob('makefile') != '' || glob('Makefile') != '')
+		" if a makefile exists and the user wants to use it, then use that
+		" irrespective of whether *.latexmain exists or not.
+		call Tex_Debug("Tex_SetTeXCompilerTarget: using the makefile in the current directory", "comp")
+		let &l:makeprg = 'make "' . a:target . '"'
+		call Tex_Debug('Tex_SetTeXCompilerTarget: set [makeprg = "' . &l:makeprg . '"]', 'comp')
+	elseif targetRule != ''
 		if a:type == 'Compile'
 			let &l:makeprg = escape(targetRule, Tex_GetVarValue('Tex_EscapeChars'))
 		elseif a:type == 'View'
@@ -36,12 +42,15 @@ function! Tex_SetTeXCompilerTarget(type, target)
 
 	elseif Tex_GetVarValue('Tex_'.a:type.'RuleComplete_'.target) != ''
 		let s:target = target
+		let s:viewer = ''
 
 	elseif a:type == 'View' && (has('osx') || has('macunix'))
+				\ && Tex_GetVarValue('Tex_TreatMacViewerAsUNIX') != 1
 		" On the mac, we can have empty view rules, so do not complain when
 		" both Tex_ViewRule_target and Tex_ViewRuleComplete_target are
 		" empty. On other platforms, we will complain... see below.
 		let s:target = target
+		let s:viewer = ''
 
 	else
 		let l:origdir = fnameescape(getcwd())
@@ -124,25 +133,17 @@ function! Tex_CompileLatex()
 	" extracted from *.latexmain (if possible) log file name depends on the
 	" main file which will be compiled.
 	if Tex_GetVarValue('Tex_UseMakefile') && (glob('makefile') != '' || glob('Makefile') != '')
-		let _makeprg = &l:makeprg
-		call Tex_Debug("Tex_CompileLatex: using the makefile in the current directory", "comp")
-		let &l:makeprg = 'make $*'
-		if exists('s:target')
-			call Tex_Debug('Tex_CompileLatex: execing [make! '.s:target.']', 'comp')
-			exec 'make! '.s:target
-		else
-			call Tex_Debug('Tex_CompileLatex: execing [make!]', 'comp')
-			exec 'make!'
-		endif
-		let &l:makeprg = _makeprg
+		" makeprg is already set by Tex_SetTeXCompilerTarget
+		call Tex_Debug('Tex_CompileLatex: execing [make!]', 'comp')
+		exec 'make!'
 	else
 		" If &makeprg has something like "$*.ps", it means that it wants the
 		" file-name without the extension... Therefore remove it.
 		if &makeprg =~ '\$\*\.\w\+'
 			let mainfname = fnamemodify(mainfname, ':r')
 		endif
-		call Tex_Debug('Tex_CompileLatex: execing [make! '.mainfname.']', 'comp')
-		exec 'make! '.mainfname
+		call Tex_Debug('Tex_CompileLatex: execing [make! "'.mainfname.'"]', 'comp')
+		exec 'make! "'.mainfname.'"'
 	endif
 	redraw!
 
@@ -257,12 +258,12 @@ function! Tex_ViewLaTeX()
 	elseif ((has('osx') || has('macunix'))
 				\ && Tex_GetVarValue('Tex_TreatMacViewerAsUNIX') != 1)
 
-		if strlen(s:viewer)
-			let appOpt = '-a '
+		if strlen(s:viewer) > 0
+			let appOpt = '-a ' . s:viewer
 		else
 			let appOpt = ''
 		endif
-		let execString = 'open '.appOpt.s:viewer.' $*.'.s:target
+		let execString = 'open '.appOpt.' $*.'.s:target
 
 	else
 		" taken from Dimitri Antoniou's tip on vim.sf.net (tip #225).
@@ -609,7 +610,7 @@ function! Tex_CompileMultipleTimes()
 		if runCount == 0 && glob(idxFileName) != '' && idxlinesBefore != idxlinesAfter
 			echomsg "Running makeindex..."
 			let temp_mp = &mp | let &mp = Tex_GetVarValue('Tex_MakeIndexFlavor')
-			exec 'silent! make '.mainFileName_root
+			exec 'silent! make "'.mainFileName_root.'"'
 			let &mp = temp_mp
 
 			let needToRerun = 1
@@ -625,7 +626,7 @@ function! Tex_CompileMultipleTimes()
 
 			echomsg "Running '".Tex_GetVarValue('Tex_BibtexFlavor')."' ..."
 			let temp_mp = &mp | let &mp = Tex_GetVarValue('Tex_BibtexFlavor')
-			exec 'silent! make '.mainFileName_root
+			exec 'silent! make "'.mainFileName_root.'"'
 			let &mp = temp_mp
 
 			let biblinesAfter = Tex_CatFile(bibFileName)

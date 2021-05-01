@@ -7,7 +7,7 @@
 "  Description: functions to interact with Syntaxfolds.vim
 "=============================================================================
 
-nnoremap <unique> <Plug>Tex_RefreshFolds :call MakeTexFolds(1, 1)<cr>
+nnoremap <Plug>Tex_RefreshFolds :call MakeTexFolds(1, 1)<cr>
 
 augroup LatexSuite
 	au LatexSuite User LatexSuiteFileType 
@@ -314,7 +314,7 @@ function! MakeTexFolds(force, manual)
 	if g:Tex_FoldedSections != '' 
 		call Tex_FoldSections(g:Tex_FoldedSections,
 			\ '^\s*\\\%(frontmatter\|mainmatter\|backmatter\)\|'
-			\. '^\s*\\begin{thebibliography\|>>>\|^\s*\\endinput\|'
+			\. '^\s*\\begin{thebibliography\|^\s*\\endinput\|'
 			\. '^\s*\\begin{slide\|^\s*\\\%(begin\|end\){document\|'
 			\. '^\s*\\\%(\%(begin\|end\){appendix}\|appendix\)')
 	endif
@@ -357,7 +357,7 @@ function! MakeTexFolds(force, manual)
 
 	" Open all folds if this function was triggered automatically
 	" and g:Tex_AutoFolding is disabled
-	if a:manual && !g:Tex_AutoFolding
+	if !a:manual && !g:Tex_AutoFolding
 		normal! zR
 	endif
 endfunction
@@ -457,9 +457,7 @@ function! TexFoldTextFunction()
 	if getline(v:foldstart) =~ '^\s*' . section_pattern
 		" This is a section. Search for the content of the mandatory argument {...}
 		let type = matchstr(getline(v:foldstart), '^\s*\zs' . section_pattern)
-		let idx = match(getline(v:foldstart), '^\s*' . section_pattern . '\zs')
-
-		return myfoldtext . type . ParseSectionTitle(v:foldstart, idx)
+		return myfoldtext . type . s:ParseSectionTitle(v:foldstart, section_pattern)
 	else
 		" This is something.
 		return myfoldtext . getline(v:foldstart)
@@ -469,12 +467,13 @@ endfunction
 " s:ParseSectionTitle: create fold text for sections {{{
 " Search for the mandatory argument of the \section command and ignore the
 " optional argument.
-function! ParseSectionTitle(foldstart, idx)
+function! s:ParseSectionTitle(foldstart, section_pattern)
 	let currlinenr = a:foldstart
-	let currline = s:StripLine(getline(currlinenr)[ a:idx : -1 ])
+	let currline = s:StripLine(getline(currlinenr))
 	let currlinelen = strlen(currline)
 
-	let index = 0
+	" Look for the section title after the section macro
+	let index = match(currline, '^\s*' . a:section_pattern . '\zs')
 
 	let maxlines = 10
 
@@ -491,7 +490,7 @@ function! ParseSectionTitle(foldstart, idx)
 			" Read a new line.
 			let maxlines = maxlines - 1
 			if maxlines < 0
-				return string . ' Scanned to many lines'
+				return string . ' Scanned too many lines'
 			endif
 			let currlinenr = currlinenr + 1
 			let currline = s:StripLine(getline(currlinenr))
@@ -505,7 +504,7 @@ function! ParseSectionTitle(foldstart, idx)
 			continue
 		endif
 
-		" Look for [] and {}
+		" Look for [] and {} at current position
 		if currline[index] =~ '[[{]'
 			if(currdepth == 0) && (currline[index] =~ '{')
 				let found_mandatory = 1
@@ -515,11 +514,17 @@ function! ParseSectionTitle(foldstart, idx)
 			let currdepth -= 1
 		endif
 
-		if found_mandatory
-			let string .= currline[index]
+		" Look for the next interesting character
+		let next_index = match( currline, '[{}[\]]', index + 1 )
+		if next_index == -1
+			let next_index = currlinelen + 1
 		endif
 
-		let index = index + 1
+		" Update the string
+		if found_mandatory
+			let string .= currline[index:next_index-1]
+		endif
+		let index = next_index
 	endwhile
 
 	return string
