@@ -215,7 +215,8 @@ def main(fname, prefix):
         value_prefix = ''
 
     rettext = getSectionLabels(lineinfo, label_prefix=label_prefix, value_prefix=value_prefix)
-    a = re.findall( r'(^|\n)> *([^ ]*)\n' , rettext)
+
+    a = re.findall( r'(^|\n)> *([^ ].*)\n' , rettext)
 
     if len(a) == 0:
         return ''
