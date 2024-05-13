@@ -206,7 +206,7 @@ def main(fname, prefix):
 
     
     # Does prefix look like a label or a value?
-    o = re.match( '(\([0-9a-zA-Z.]*|\w*\.[0-9a-zA-Z.]*)' , prefix )
+    o = re.match( r'(\([0-9a-zA-Z.]*|\w*\.[0-9a-zA-Z.]*)' , prefix )
     if o:
         label_prefix = ''
         value_prefix = re.escape(prefix)
